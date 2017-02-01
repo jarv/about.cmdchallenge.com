@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Submit your Salary</title><link href="https://about.submityoursalary.com/" rel="alternate"></link><link href="https://about.submityoursalary.com/feeds/all.atom.xml" rel="self"></link><id>https://about.submityoursalary.com/</id><updated>2016-12-10T00:00:00-05:00</updated><entry><title>Submit your Salary</title><link href="https://about.submityoursalary.com/hello-world.html" rel="alternate"></link><published>2016-12-10T00:00:00-05:00</published><updated>2016-12-10T00:00:00-05:00</updated><author><name>john</name></author><id>tag:about.submityoursalary.com,2016-12-10:hello-world.html</id><summary type="html">&lt;p&gt;Hello and welcome to my first server-less side-project. This is a very simple site for submitting salaries and reviews.
+What I hoped to accomplish with this was website with a very clean and minimal UI and something hassle-free on
+on the back-end. If you have suggestions or comments please let me know by
+&lt;a href="mailto:info@submityoursalary.com"&gt;email&lt;/a&gt; or &lt;a href="https://tiwitter.com/salarysubmit"&gt;twitter&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;It was created with the following goals in mind:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Allow users to submit reviews anonymously.&lt;/li&gt;
+&lt;li&gt;Build in some rudimentary protection against spamming and malicious users.&lt;/li&gt;
+&lt;li&gt;Keep the cost to host it as low as possible, static site, server-less.&lt;/li&gt;
+&lt;li&gt;Minimal and simple front-end design, no heavy js frameworks.&lt;/li&gt;
+&lt;li&gt;Make data-dumps public.&lt;/li&gt;
+&lt;li&gt;And of course on the tech side of things play around with some new stuff I haven't played with before..&lt;/li&gt;
+&lt;/ul&gt;</summary></entry></feed>
