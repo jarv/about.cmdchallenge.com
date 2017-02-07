@@ -1,13 +1,15 @@
 PY?=python
 PELICAN?=pelican
 PELICANOPTS=
+PORT=6969
 
 BASEDIR=$(CURDIR)
 INPUTDIR=$(BASEDIR)/content
 OUTPUTDIR=$(BASEDIR)/output
 CONFFILE=$(BASEDIR)/pelicanconf.py
 PUBLISHCONF=$(BASEDIR)/publishconf.py
-
+DISTID := E3HQYUVY2DDHOZ
+AWS_PROFILE := cmdchallenge
 FTP_HOST=localhost
 FTP_USER=anonymous
 FTP_TARGET_DIR=/
@@ -112,7 +114,8 @@ ftp_upload: publish
 	lftp ftp://$(FTP_USER)@$(FTP_HOST) -e "mirror -R $(OUTPUTDIR) $(FTP_TARGET_DIR) ; quit"
 
 sync: publish
-	aws --profile cmdchallenge s3 sync $(OUTPUTDIR)/ s3://$(S3_BUCKET) --acl public-read 
+	aws --profile cmdchallenge s3 sync $(OUTPUTDIR)/ s3://$(S3_BUCKET) --acl public-read  --delete
+	aws --region us-east-1 --profile $(AWS_PROFILE) cloudfront create-invalidation --distribution-id $(DISTID) --paths '/*'
 
 cf_upload: publish
 	cd $(OUTPUTDIR) && swift -v -A https://auth.api.rackspacecloud.com/v1.0 -U $(CLOUDFILES_USERNAME) -K $(CLOUDFILES_API_KEY) upload -c $(CLOUDFILES_CONTAINER) .

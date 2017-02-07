@@ -4,8 +4,8 @@
     <ol id="post-list">
     {% for article in articles_page.object_list %}        
         <li class="posts">
-          <article class="comment">
-            <div class="comment-content">
+          <article class="post">
+            <div class="post-content">
               <header> 
                 <h1 class="content-entry-title">
                     <a href="{{ SITEURL }}/{{ article.url }}" rel="bookmark" title="Permalink to {{ article.title}}">{{ article.title }}</a>
@@ -16,11 +16,7 @@
                   {{ article.locale_date }} 
                 </abbr>
               </footer><!-- /.post-info -->
-              <div class="entry-summary"> {{ article.summary }} <br />
-
-              {% if article.content|length > article.summary|length -%}
-              <a href="{{ SITEURL }}/{{ article.url }}">read more</a></div>
-              {% endif %}
+              <div class="entry-content"> {{ article.content }}
               <!-- /.entry-content -->
             </div>
           </article>
