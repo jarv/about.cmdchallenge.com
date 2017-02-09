@@ -8,7 +8,7 @@ SITEURL = 'https://about.cmdchallenge.com'
 FEED_RSS = 'rss.xml'
 
 PATH = 'content'
-GOOGLE_ANALYTICS_ID = ''
+GOOGLE_ANALYTICS_ID = 'UA-91656263-1'
 TIMEZONE = 'US/Eastern'
 THEME = 'cmdchallenge'
 DEFAULT_LANG = u'en'

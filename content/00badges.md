@@ -2,7 +2,7 @@ Title: cmdchallenge - now with badges
 Date: 2017-02-07
 Slug: now-with-badges
 
-![Imgur](http://i.imgur.com/hHDsAS4h.png)
+![New badges](https://i.imgur.com/hHDsAS4h.png)
 
 
 Just returned from an extended weekend of traveling and now finally getting to
@@ -16,6 +16,6 @@ than it is worth.  New challenges are coming in via pull requests (thanks!) and 
 the user-contributed ones into their own category soon. If you have more ideas please let me know
 via [twitter](https://twitter.com/thecmdchallenge) or mail.
 
-![Imgur](http://i.imgur.com/KpNPaoIm.jpg)
+![Tel Aviv](https://i.imgur.com/KpNPaoIm.jpg)
 
 Now the back to work and back to cold weather...

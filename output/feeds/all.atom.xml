@@ -1,21 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>cmdchallenge</title><link href="https://about.cmdchallenge.com/" rel="alternate"></link><link href="https://about.cmdchallenge.com/feeds/all.atom.xml" rel="self"></link><id>https://about.cmdchallenge.com/</id><updated>2017-02-08T00:00:00-05:00</updated><entry><title>191 ways to echo hello world on the command line</title><link href="https://about.cmdchallenge.com/191-hello-worlds.html" rel="alternate"></link><published>2017-02-08T00:00:00-05:00</published><updated>2017-02-08T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-08:191-hello-worlds.html</id><summary type="html">&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and so far it has been one of the
-more interesting tiny site launches as it is getting more than the usual tiny trickle of side-project internet traffic.
-So far I have tried to contain the entire thing in an AWS free tier account, it has worked out OK so far with a
-few hiccups here and there. Since several people have asked I will share more details about how the site it is put
-together in a future post, &lt;a href="https://twitter.com/thecmdchallenge"&gt;follow cmdchallenge on twitter&lt;/a&gt; or if you are one of those older
-folks you can use &lt;a href="/rss.xml"&gt;rss&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Until then I wanted to share some submissions data. You may be wondering &lt;em&gt;what do random people on the internet and hackernews
-type if you give them some basic command-line tasks and a shell prompt?&lt;/em&gt;  Well lucky this is no longer one of the biggest
-mysteries of the universe.  Starting off with Challenge #1:&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>cmdchallenge</title><link href="https://about.cmdchallenge.com/" rel="alternate"></link><link href="https://about.cmdchallenge.com/feeds/all.atom.xml" rel="self"></link><id>https://about.cmdchallenge.com/</id><updated>2017-02-08T00:00:00-05:00</updated><entry><title>191 ways to echo hello world on the command line</title><link href="https://about.cmdchallenge.com/191-hello-worlds.html" rel="alternate"></link><published>2017-02-08T00:00:00-05:00</published><updated>2017-02-08T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-08:191-hello-worlds.html</id><summary type="html">&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;, a weekend project
+to create some common command-line tasks that can be done in a single line of bash.
+One common request has been to share user-submitted solutions. Or to put it another way,
+you may be wondering &lt;em&gt;what do random people on the internet and hackernews type if you give them
+some basic command-line tasks and a shell prompt?&lt;/em&gt;  Well lucky for me this is no longer a mystery!&lt;/p&gt;
+&lt;p&gt;Starting off with Challenge #1:&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://cmdchallenge.com/#/hello_world"&gt;CMD Challenge #1&lt;/a&gt;: &lt;strong&gt;print "hello world" at the bash prompt&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;There have been a lot of diverse input for such a simple task. I really love how people do weird stuff even when it is totally unnecessary.&lt;/p&gt;
+&lt;p&gt;There has been a lot of diverse input for such a simple task. I really love how people do weird stuff even when it is totally unnecessary.&lt;/p&gt;
+&lt;p&gt;Here are some of my favorites:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; i in h e l l o &lt;span class="se"&gt;\ &lt;/span&gt; w o r l d &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;awk -F, &lt;span class="s1"&gt;&amp;#39; {print $NR}&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;tr -d &lt;span class="se"&gt;\\&lt;/span&gt;n&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt; ifmmp xpsme &lt;span class="p"&gt;|&lt;/span&gt;tr bcdefghijklmnopqrstuvwxyza abcdefghijklmnopqrstuvwxyz
+touch helloworld &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt; &amp;gt; helloworld &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; cat helloworld
+sed &lt;span class="s1"&gt;&amp;#39;s.\.\...;yhHh\hh;ywWw\ww;2,$d&amp;#39;&lt;/span&gt; README
+&lt;/pre&gt;&lt;/div&gt;
+
+
 &lt;p&gt;A few things to note that may clarify some of the more interesting submissions:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;There is a &lt;code&gt;README&lt;/code&gt; in each challenge directory, in this case it contains the string "hello world" so some people took advantage of that.&lt;/li&gt;
 &lt;li&gt;The directory itself was named &lt;code&gt;hello world&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Here are all of the correct (unique) submissions for the first challenge:&lt;/p&gt;
+&lt;p&gt;Here are all of the correct submissions for the first challenge as of yesterday:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;d e h l o r w X &lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;7&lt;/span&gt; &lt;span class="m"&gt;6&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; 0&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt; i in &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="p"&gt;[@]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;tr X&lt;span class="se"&gt;\n&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;
 &lt;span class="o"&gt;(&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; i in h e l l o &lt;span class="se"&gt;\ &lt;/span&gt; w o r l d &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;awk -F, &lt;span class="s1"&gt;&amp;#39; {print $NR}&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;tr -d &lt;span class="se"&gt;\\&lt;/span&gt;n&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt;
 &lt;span class="k"&gt;for&lt;/span&gt; i in h e l l o&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; j in w o r l d&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="nv"&gt;$j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt;
@@ -210,9 +215,14 @@ cat &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class="s
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;br /&gt;
-Of course there are a lot of quoting and space variations here that maybe are not as interesting. I should be able to make a
-data-dump available soon with the responses for all challenges. Stay tuned!&lt;/p&gt;</summary></entry><entry><title>cmdchallenge - now with badges</title><link href="https://about.cmdchallenge.com/now-with-badges.html" rel="alternate"></link><published>2017-02-07T00:00:00-05:00</published><updated>2017-02-07T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-07:now-with-badges.html</id><summary type="html">&lt;p&gt;&lt;img alt="Imgur" src="http://i.imgur.com/hHDsAS4h.png" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p&gt;Of course there are a lot of quoting and space variations here as well. I will make a
+data-dump available soon with the responses for all challenges.&lt;/p&gt;
+&lt;p&gt;On the building and hosting side of things this is getting more than the usual tiny trickle of side-project internet traffic.
+So far I have tried to contain the entire thing in an AWS free tier account, it has worked out OK so far with a
+few hiccups here and there. Since several people have asked, I will share more details about how the site is put
+together in a future post, follow &lt;a href="https://twitter.com/thecmdchallenge"&gt;cmdchallenge on twitter&lt;/a&gt; or
+use &lt;a href="/rss.xml"&gt;rss&lt;/a&gt;.&lt;/p&gt;</summary></entry><entry><title>cmdchallenge - now with badges</title><link href="https://about.cmdchallenge.com/now-with-badges.html" rel="alternate"></link><published>2017-02-07T00:00:00-05:00</published><updated>2017-02-07T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-07:now-with-badges.html</id><summary type="html">&lt;p&gt;&lt;img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png" /&gt;&lt;/p&gt;
 &lt;p&gt;Just returned from an extended weekend of traveling and now finally getting to
 open questions and issues on the &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; site. Sorry
 for the slow responses.&lt;/p&gt;
@@ -222,5 +232,5 @@ computer to the next. If people want it I could add logins but it seems like it 
 than it is worth.  New challenges are coming in via pull requests (thanks!) and I think I will move
 the user-contributed ones into their own category soon. If you have more ideas please let me know
 via &lt;a href="https://twitter.com/thecmdchallenge"&gt;twitter&lt;/a&gt; or mail.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Imgur" src="http://i.imgur.com/KpNPaoIm.jpg" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg" /&gt;&lt;/p&gt;
 &lt;p&gt;Now the back to work and back to cold weather...&lt;/p&gt;</summary></entry></feed>

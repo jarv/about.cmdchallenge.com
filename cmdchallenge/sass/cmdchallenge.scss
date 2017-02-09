@@ -119,14 +119,14 @@ div.post-content {
     padding-left: .4em;
   }
   div.entry-content {
-    color: black;
+    color: #292f33;
     background-color: white;
     font-family: $helvetica;
     padding: 1em;
     border-radius: 10px;
     @include media(max-width $medium) {
       border-radius: 0px;
-      padding: 0;
+      padding: .5em;
     }
     a:link, a:visited {
       color: $linkblue;
@@ -135,7 +135,8 @@ div.post-content {
       color: darken($linkblue, 20%);
     }
     pre {
-      color: $term-green;
+      color: $term-green2;
+      padding: .5em;
       background-color: black;
       margin: auto;
       width: 90%;

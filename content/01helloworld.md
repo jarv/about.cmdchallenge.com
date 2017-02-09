@@ -2,29 +2,38 @@ Title: 191 ways to echo hello world on the command line
 Date: 2017-02-08
 Slug: 191-hello-worlds
 
-It's been about 12 days since the launch of [cmdchallenge](https://cmdchallenge.com) and so far it has been one of the
-more interesting tiny site launches as it is getting more than the usual tiny trickle of side-project internet traffic.
-So far I have tried to contain the entire thing in an AWS free tier account, it has worked out OK so far with a
-few hiccups here and there. Since several people have asked I will share more details about how the site it is put
-together in a future post, [follow cmdchallenge on twitter](https://twitter.com/thecmdchallenge) or if you are one of those older
-folks you can use [rss](/rss.xml).
+It's been about 12 days since the launch of [cmdchallenge](https://cmdchallenge.com), a weekend project
+to create some common command-line tasks that can be done in a single line of bash.
+One common request has been to share user-submitted solutions. Or to put it another way,
+you may be wondering *what do random people on the internet and hackernews type if you give them
+some basic command-line tasks and a shell prompt?*  Well lucky for me this is no longer a mystery!
 
-Until then I wanted to share some submissions data. You may be wondering *what do random people on the internet and hackernews
-type if you give them some basic command-line tasks and a shell prompt?*  Well lucky this is no longer one of the biggest
-mysteries of the universe.  Starting off with Challenge #1:
+Starting off with Challenge #1:
 
 [CMD Challenge #1](https://cmdchallenge.com/#/hello_world): **print "hello world" at the bash prompt**
 
-There have been a lot of diverse input for such a simple task. I really love how people do weird stuff even when it is totally unnecessary.
+There has been a lot of diverse input for such a simple task. I really love how people do weird stuff even when it is totally unnecessary.
+
+Here are some of my favorites:
+
+```
+:::bash
+( for i in h e l l o \  w o r l d ; do echo "$i" |awk -F, ' {print $NR}'; done ) |tr -d \\n; echo
+echo ifmmp xpsme |tr bcdefghijklmnopqrstuvwxyza abcdefghijklmnopqrstuvwxyz
+touch helloworld && echo "hello world" > helloworld && cat helloworld
+sed 's.\.\...;yhHh\hh;ywWw\ww;2,$d' README
+```
 
 A few things to note that may clarify some of the more interesting submissions:
 
 * There is a `README` in each challenge directory, in this case it contains the string "hello world" so some people took advantage of that.
 * The directory itself was named `hello world`.
 
-Here are all of the correct (unique) submissions for the first challenge:
 
-```bash
+Here are all of the correct submissions for the first challenge as of yesterday:
+
+```
+:::bash
 a=(d e h l o r w X \");s=(2 1 3 3 4 7 6 4 5 3 0);for i in ${s[@]} ; do echo -n ${a[$i]}|tr X\n ' ' ; done ; echo ""
 ( for i in h e l l o \  w o r l d ; do echo "$i" |awk -F, ' {print $NR}'; done ) |tr -d \\n; echo
 for i in h e l l o; do echo -n $i; done; echo -n " "; for j in w o r l d; do echo -n $j; done
@@ -218,6 +227,12 @@ echo  hello world
 echo hello world
 ```
 <br />
-Of course there are a lot of quoting and space variations here that maybe are not as interesting. I should be able to make a
-data-dump available soon with the responses for all challenges. Stay tuned!
 
+Of course there are a lot of quoting and space variations here as well. I will make a
+data-dump available soon with the responses for all challenges.
+
+On the building and hosting side of things this is getting more than the usual tiny trickle of side-project internet traffic.
+So far I have tried to contain the entire thing in an AWS free tier account, it has worked out OK so far with a
+few hiccups here and there. Since several people have asked, I will share more details about how the site is put
+together in a future post, follow [cmdchallenge on twitter](https://twitter.com/thecmdchallenge) or
+use [rss](/rss.xml).
