@@ -118,6 +118,13 @@ div.post-content {
     padding-bottom: .2em;
     padding-left: .4em;
   }
+
+  div.entry-content-summary {
+    pre {
+      max-height: 20em;
+    }
+  }
+
   div.entry-content {
     color: #292f33;
     background-color: white;
@@ -144,7 +151,6 @@ div.post-content {
         width: 100%;
       }
       font-size: .8em;
-      max-height: 20em;
     }
   }
 
