@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Wed, 08 Feb 2017 00:00:00 -0500</lastBuildDate><item><title>191 ways to echo hello world on the command line</title><link>https://about.cmdchallenge.com/191-hello-worlds.html</link><description>&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;, a weekend project
+<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Fri, 24 Feb 2017 00:00:00 -0500</lastBuildDate><item><title>figlet breakout</title><link>https://about.cmdchallenge.com/figlet-breakout.html</link><description>&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
+to dust off a 2 year old javascript project which created a breakout game from figlet
+fonts. Not quite a full re-write but fixed a lot of bugs and did away completely with
+coffee-script. More info on the &lt;a href="https://github.com/jarv/figlet-breakout"&gt;github page&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Or you can &lt;a href="https://www.jarv.org/figlet-breakout/#/click%20me%20to%20play"&gt;click here to play&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Fri, 24 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-24:figlet-breakout.html</guid></item><item><title>191 ways to echo hello world on the command line</title><link>https://about.cmdchallenge.com/191-hello-worlds.html</link><description>&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;, a weekend project
 to create some common command-line tasks that can be done in a single line of bash.
 One common request has been to share user-submitted solutions. Or to put it another way,
 you may be wondering &lt;em&gt;what do random people on the internet and hackernews type if you give them
