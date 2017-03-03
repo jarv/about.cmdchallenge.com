@@ -31,6 +31,11 @@ $linkblue: #0066cc;
 @import "neat/neat";
 @import "base/base";
 
+@font-face {
+  font-family: "pressStart";
+  src: url("fonts/PressStart2P-Regular.ttf"); }
+
+
 * {
   -webkit-tap-highlight-color: rgba(0,0,0,0);
   -webkit-tap-highlight-color: transparent; /* For some Androids */
@@ -46,12 +51,15 @@ a:hover {
 
 
 div.navbar {
-  font-size: 1.2em;
+  background-color: darken($badge-border, 10%);
+  padding-top: .2em;
+  padding-bottom: .2em;
+  text-align: center;
+  font-size: 1.5em;
   @include media(max-width $medium) {
-    font-size: .7em;
+    font-size: .8em;
   }
   width: 100%;
-  text-align: right;
   font-family: $monospace;
   ul {
     margin: 0;
@@ -74,8 +82,13 @@ div.header {
   font-size: 1em;
   color: $term-green2;
   div.challenge {
+    width: 836px; /* 76 * 11 */
+    margin: auto;
+    font-family: "pressStart";
+    font-size: 11px;
     @include media(max-width $medium) {
-      font-size: .5em;
+      width: 304px; /* 76 * 4 */
+      font-size: 4px;
     }
   }
 }
