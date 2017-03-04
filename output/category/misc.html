@@ -49,9 +49,10 @@
                   Sat 22 April 2017 
                 </abbr>
               </footer><!-- /.post-info -->
-              <div class="entry-content entry-content-summary"> <p>Have you ever thought about building a side-project for fun but you don't want to spend any money on hosting? 
+              <div class="entry-content entry-content-summary"> <p>Have you ever thought about building a side-project for fun without spending a lot on hosting?
 This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
-a quick overview of how <a href="https://cmdchallenge.com">cmdchallenge.com</a> is built. The site is a simple web application side-project that executes shell commands
+a quick overview of how <a href="https://cmdchallenge.com">cmdchallenge.com</a> is built.
+The site is a simple web application side-project that executes shell commands
 remotely in a docker container in AWS. The front-end gives the feeling of a normal terminal but underneath
 it is sending whatever commands you give it remotely on an EC2 instance inside a Docker container.</p>
 <p>The source code for most of it is located <a href="https://github.com/jarv/cmdchallenge">on github</a> including
@@ -88,7 +89,7 @@ With these tools the following automated steps are taken to deploy the site:</p>
 <li>Create a Docker image that holds the challenges.</li>
 <li>Launch a new coreos EC2 instance.</li>
 <li>Run a fabric script that does the following on the instance over SSH:<ul>
-<li>Configures TLS for the Docker API.</li>
+<li>Configures TLS so that a Lambda function can communicate to Docker on an EC2 instance.</li>
 <li>Executes some periodic commands to ensure that the host cleans up old containers.</li>
 <li>Downloads the docker image that has the challenges.</li>
 <li>Copies the read-only volume that is used on the container for the tests and command runner.</li>
@@ -127,7 +128,7 @@ use a certificate from ACM and cache requests.</p>
 
 
 <p><p/> </p>
-<p>The diagram above hasn't changed much and <strong>a single t2.micro instance seems to be fine for handling all of the load, even at peak.</strong><br />
+<p>One nice thing about using AWS server-less components was that <strong>a single t2.micro instance ended up being fine for handling all of the load, even at peak.</strong><br />
 <em>See section on caching/performance below.</em></p>
 <p><p/> </p>
 <h2>Here is what happens when a command is submitted in the <a href="cmdchallenge.com terminal">cmdchallenge.com</a>:</h2>
@@ -191,6 +192,37 @@ to add more capacity. So far it seems to be operating fine with just one tiny se
             <div class="post-content">
               <header> 
                 <h1 class="content-entry-title">
+                    <a href="https://about.cmdchallenge.com/user-submitted-solutions.html" rel="bookmark" title="Permalink to User Submitted Solutions">User Submitted Solutions</a>
+                </h1> 
+              </header>
+              <footer class="post-info">
+                <abbr>
+                  Sat 04 March 2017 
+                </abbr>
+              </footer><!-- /.post-info -->
+              <div class="entry-content entry-content-summary"> <p>Adding to the interesting <a href="/191-hello-worlds.html">191 ways to echo hello world</a> I've now added the ability
+to see <a href="https://cmdchallenge.com/s/">user-submitted solutions</a> to <a href="https://cmdchallenge.com">cmdchallenge</a>.</p>
+<p>There are some gems if you dig through them including maybe the longest regex I've ever seen for
+pulling an IP address out of a file:</p>
+<div class="highlight"><pre><span></span><span class="o">(</span>25<span class="o">[</span>0-5<span class="o">]</span><span class="p">|</span>2<span class="o">[</span>0-4<span class="o">][</span>0-9<span class="o">]</span><span class="p">|</span><span class="o">[</span>01<span class="o">]</span>?<span class="o">[</span>0-9<span class="o">][</span>0-9<span class="o">]</span>?<span class="o">)</span><span class="se">\.</span><span class="o">(</span>25<span class="o">[</span>0-5<span class="o">]</span><span class="p">|</span>2<span class="o">[</span>0-4<span class="o">][</span>0-9<span class="o">]</span><span class="p">|</span><span class="o">[</span>01<span class="o">]</span>?<span class="o">[</span>0-9<span class="o">][</span>0-9<span class="o">]</span>?<span class="o">)</span><span class="se">\.</span><span class="o">(</span>25<span class="o">[</span>0-5<span class="o">]</span><span class="p">|</span>2<span class="o">[</span>0-4<span class="o">][</span>0-9<span class="o">]</span><span class="p">|</span><span class="o">[</span>01<span class="o">]</span>?<span class="o">[</span>0-9<span class="o">][</span>0-9<span class="o">]</span>?<span class="o">)</span><span class="se">\.</span><span class="o">(</span>25<span class="o">[</span>0-5<span class="o">]</span><span class="p">|</span>2<span class="o">[</span>0-4<span class="o">][</span>0-9<span class="o">]</span><span class="p">|</span><span class="o">[</span>01<span class="o">]</span>?<span class="o">[</span>0-9<span class="o">][</span>0-9<span class="o">]</span>?<span class="o">)</span>
+</pre></div>
+
+
+<p>Also scrolling down the page of <a href="https://cmdchallenge.com/s/#/corrupted_text">solutions to the corrupted text problem</a>
+is glorious.</p>
+<p>The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
+more, let me know on <a href="https://twitter.com/thecmdchallenge">twitter</a> and also feel free to submit suggestions for
+new challenges on <a href="https://github.com/jarv/cmdchallenge">github</a>.</p>
+              <!-- /.entry-content -->
+            </div>
+          </article>
+        </li>
+        
+        <li class="posts">
+          <article class="post">
+            <div class="post-content">
+              <header> 
+                <h1 class="content-entry-title">
                     <a href="https://about.cmdchallenge.com/figlet-breakout.html" rel="bookmark" title="Permalink to figlet breakout">figlet breakout</a>
                 </h1> 
               </header>
@@ -244,7 +276,7 @@ sed <span class="s1">&#39;s.\.\...;yhHh\hh;ywWw\ww;2,$d&#39;</span> README
 <li>The directory itself was named <code>hello world</code>.</li>
 </ul>
 <p>Here are all of the correct submissions for the first challenge as of yesterday:</p>
-<div class="highlight"><pre><span></span><span class="nv">a</span><span class="o">=(</span>d e h l o r w X <span class="se">\&quot;</span><span class="o">)</span><span class="p">;</span><span class="nv">s</span><span class="o">=(</span><span class="m">2</span> <span class="m">1</span> <span class="m">3</span> <span class="m">3</span> <span class="m">4</span> <span class="m">7</span> <span class="m">6</span> <span class="m">4</span> <span class="m">5</span> <span class="m">3</span> <span class="m">0</span><span class="o">)</span><span class="p">;</span><span class="k">for</span> i in <span class="si">${</span><span class="nv">s</span><span class="p">[@]</span><span class="si">}</span> <span class="p">;</span> <span class="k">do</span> <span class="nb">echo</span> -n <span class="si">${</span><span class="nv">a</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span><span class="si">}</span><span class="p">|</span>tr X<span class="se">\n</span> <span class="s1">&#39; &#39;</span> <span class="p">;</span> <span class="k">done</span> <span class="p">;</span> <span class="nb">echo</span> <span class="s2">&quot;&quot;</span>
+<div class="highlight"><pre><span></span><span class="nv">a</span><span class="o">=(</span>d e h l o r w X <span class="se">\&quot;</span><span class="o">)</span><span class="p">;</span><span class="nv">s</span><span class="o">=(</span><span class="m">2</span> <span class="m">1</span> <span class="m">3</span> <span class="m">3</span> <span class="m">4</span> <span class="m">7</span> <span class="m">6</span> <span class="m">4</span> <span class="m">5</span> <span class="m">3</span> 0<span class="o">)</span><span class="p">;</span><span class="k">for</span> i in <span class="si">${</span><span class="nv">s</span><span class="p">[@]</span><span class="si">}</span> <span class="p">;</span> <span class="k">do</span> <span class="nb">echo</span> -n <span class="si">${</span><span class="nv">a</span><span class="p">[</span><span class="nv">$i</span><span class="p">]</span><span class="si">}</span><span class="p">|</span>tr X<span class="se">\n</span> <span class="s1">&#39; &#39;</span> <span class="p">;</span> <span class="k">done</span> <span class="p">;</span> <span class="nb">echo</span> <span class="s2">&quot;&quot;</span>
 <span class="o">(</span> <span class="k">for</span> i in h e l l o <span class="se">\ </span> w o r l d <span class="p">;</span> <span class="k">do</span> <span class="nb">echo</span> <span class="s2">&quot;</span><span class="nv">$i</span><span class="s2">&quot;</span> <span class="p">|</span>awk -F, <span class="s1">&#39; {print $NR}&#39;</span><span class="p">;</span> <span class="k">done</span> <span class="o">)</span> <span class="p">|</span>tr -d <span class="se">\\</span>n<span class="p">;</span> <span class="nb">echo</span>
 <span class="k">for</span> i in h e l l o<span class="p">;</span> <span class="k">do</span> <span class="nb">echo</span> -n <span class="nv">$i</span><span class="p">;</span> <span class="k">done</span><span class="p">;</span> <span class="nb">echo</span> -n <span class="s2">&quot; &quot;</span><span class="p">;</span> <span class="k">for</span> j in w o r l d<span class="p">;</span> <span class="k">do</span> <span class="nb">echo</span> -n <span class="nv">$j</span><span class="p">;</span> <span class="k">done</span>
 cat README <span class="p">|</span> head -n <span class="m">4</span> <span class="p">|</span> tail -n <span class="m">1</span> <span class="p">|</span> awk <span class="s1">&#39;{ print $3 &quot; &quot; $4 }&#39;</span> <span class="p">|</span> sed -e <span class="s1">&#39;s/\&quot;//g;s/\.//g&#39;</span>
@@ -464,7 +496,7 @@ use <a href="/rss.xml">rss</a>.</p>
                   Tue 07 February 2017 
                 </abbr>
               </footer><!-- /.post-info -->
-              <div class="entry-content entry-content-summary"> <p><img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png"></p>
+              <div class="entry-content entry-content-summary"> <p><img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png" /></p>
 <p>Just returned from an extended weekend of traveling and now finally getting to
 open questions and issues on the <a href="https://cmdchallenge.com">cmdchallenge</a> site. Sorry
 for the slow responses.</p>
@@ -474,7 +506,7 @@ computer to the next. If people want it I could add logins but it seems like it 
 than it is worth.  New challenges are coming in via pull requests (thanks!) and I think I will move
 the user-contributed ones into their own category soon. If you have more ideas please let me know
 via <a href="https://twitter.com/thecmdchallenge">twitter</a> or mail.</p>
-<p><img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg"></p>
+<p><img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg" /></p>
 <p>Now the back to work and back to cold weather...</p>
               <!-- /.entry-content -->
             </div>

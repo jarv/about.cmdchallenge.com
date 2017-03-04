@@ -43,9 +43,10 @@
       </abbr>
     </footer><!-- /.post-info -->
     <div class="entry-content">
-      <p>Have you ever thought about building a side-project for fun but you don't want to spend any money on hosting? 
+      <p>Have you ever thought about building a side-project for fun without spending a lot on hosting?
 This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
-a quick overview of how <a href="https://cmdchallenge.com">cmdchallenge.com</a> is built. The site is a simple web application side-project that executes shell commands
+a quick overview of how <a href="https://cmdchallenge.com">cmdchallenge.com</a> is built.
+The site is a simple web application side-project that executes shell commands
 remotely in a docker container in AWS. The front-end gives the feeling of a normal terminal but underneath
 it is sending whatever commands you give it remotely on an EC2 instance inside a Docker container.</p>
 <p>The source code for most of it is located <a href="https://github.com/jarv/cmdchallenge">on github</a> including
@@ -82,7 +83,7 @@ With these tools the following automated steps are taken to deploy the site:</p>
 <li>Create a Docker image that holds the challenges.</li>
 <li>Launch a new coreos EC2 instance.</li>
 <li>Run a fabric script that does the following on the instance over SSH:<ul>
-<li>Configures TLS for the Docker API.</li>
+<li>Configures TLS so that a Lambda function can communicate to Docker on an EC2 instance.</li>
 <li>Executes some periodic commands to ensure that the host cleans up old containers.</li>
 <li>Downloads the docker image that has the challenges.</li>
 <li>Copies the read-only volume that is used on the container for the tests and command runner.</li>
@@ -121,7 +122,7 @@ use a certificate from ACM and cache requests.</p>
 
 
 <p><p/> </p>
-<p>The diagram above hasn't changed much and <strong>a single t2.micro instance seems to be fine for handling all of the load, even at peak.</strong><br />
+<p>One nice thing about using AWS server-less components was that <strong>a single t2.micro instance ended up being fine for handling all of the load, even at peak.</strong><br />
 <em>See section on caching/performance below.</em></p>
 <p><p/> </p>
 <h2>Here is what happens when a command is submitted in the <a href="cmdchallenge.com terminal">cmdchallenge.com</a>:</h2>
