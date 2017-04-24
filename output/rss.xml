@@ -1,9 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Fri, 24 Feb 2017 00:00:00 -0500</lastBuildDate><item><title>figlet breakout</title><link>https://about.cmdchallenge.com/figlet-breakout.html</link><description>&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
+<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Sat, 22 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link>https://about.cmdchallenge.com/building-cmdchallenge.html</link><description>&lt;p&gt;Have you ever thought about building a side-project for fun but you don't want to spend any money on hosting? 
+This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
+a quick overview of how &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge.com&lt;/a&gt; is built. The site is a simple web application side-project that executes shell commands
+remotely in a docker container in AWS. The front-end gives the feeling of a normal terminal but underneath
+it is sending whatever commands you give it remotely on an EC2 instance inside a Docker container.&lt;/p&gt;
+&lt;p&gt;The source code for most of it is located &lt;a href="https://github.com/jarv/cmdchallenge"&gt;on github&lt;/a&gt; including
+ a tiny command executer written in Go, the challenge definitions, and a test harness.&lt;/p&gt;
+&lt;p&gt;The following AWS services are used for the site:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Cloudfront&lt;/li&gt;
+&lt;li&gt;API Gateway&lt;/li&gt;
+&lt;li&gt;S3 bucket&lt;/li&gt;
+&lt;li&gt;Lambda function&lt;/li&gt;
+&lt;li&gt;DynamoDB&lt;/li&gt;
+&lt;li&gt;t2.micro EC2 Instance running coreos&lt;/li&gt;
+&lt;li&gt;CloudWatch logs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;p&gt;In addition to this Amazon Certificate Manager and Route53 was used but for everything above you can keep costs close to zero in AWS. There is no free tier for Route53 (sad panda) but it's like 50 cents a month for a single zone.&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Features:&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Submit commands, execute them in a bash sub-shell.&lt;/li&gt;
+&lt;li&gt;Check the output of the command for different challenges.&lt;/li&gt;
+&lt;li&gt;Run tests for challenges that need them in addition or in place of checking output.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Deployment tools (simple and boring):&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Makefiles.&lt;/li&gt;
+&lt;li&gt;Python fabric for running commands and copying files over ssh.&lt;/li&gt;
+&lt;li&gt;Kappa, zips up code, sends it to lambda, also manages Lambda permissions.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt;
+With these tools the following automated steps are taken to deploy the site:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Create a Docker image that holds the challenges.&lt;/li&gt;
+&lt;li&gt;Launch a new coreos EC2 instance.&lt;/li&gt;
+&lt;li&gt;Run a fabric script that does the following on the instance over SSH:&lt;ul&gt;
+&lt;li&gt;Configures TLS for the Docker API.&lt;/li&gt;
+&lt;li&gt;Executes some periodic commands to ensure that the host cleans up old containers.&lt;/li&gt;
+&lt;li&gt;Downloads the docker image that has the challenges.&lt;/li&gt;
+&lt;li&gt;Copies the read-only volume that is used on the container for the tests and command runner.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Update Lambda with new code.&lt;/li&gt;
+&lt;li&gt;Sync the static assets to S3.&lt;/li&gt;
+&lt;li&gt;Invalidates CF cache for the main site.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Architecture diagram:&lt;/h2&gt;
+&lt;p&gt;There are two public entry points for the site, one is the main web-site which is static and served S3. 
+The other is the API gateway at api.cmdchallenge.com which is also fronted by CloudFront so that it can
+use a certificate from ACM and cache requests.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  api.cmdchallenge.com         cmdchallenge.com
+  ********************         ****************
++---------------------+    +---------------------+ 
+|      Cloudfront     |    |      Cloudfront     |   
++---------------------+    +---------------------+  
+           |                          | 
++---------------------+         +-----------+
+|    API Gateway      |         | s3 bucket |
++---------------------+         +-----------+
+           |
+  +-----------------+
+  |                 |
+  | Lambda Function |    +----------+
+  |                 |--- |          |
+  +-----------------+   \| DynamoDB |
+           |             |          |
+   +--------------+      +----------+
+   | EC2 t2.micro |
+   |   (coreos)   |
+   +--------------+
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;p&gt;The diagram above hasn't changed much and &lt;strong&gt;a single t2.micro instance seems to be fine for handling all of the load, even at peak.&lt;/strong&gt;&lt;br /&gt;
+&lt;em&gt;See section on caching/performance below.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Here is what happens when a command is submitted in the &lt;a href="cmdchallenge.com terminal"&gt;cmdchallenge.com&lt;/a&gt;:&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Javascript code sends an HTTP GET to https://api.cmdchallenge.com&lt;/li&gt;
+&lt;li&gt;If it is cached it returns a response immediately. If not, it forwards the request to the API gateway which in turn sends it to a Lambda function.&lt;/li&gt;
+&lt;li&gt;The Lambda function looks up the challenge and the command in DynamoDb and if it already has an answer it returns that. If the challenge doesn't exist in DyamoDB it is forwarded to the EC2 instance as a command using the docker API.&lt;/li&gt;
+&lt;li&gt;The command that the user provides is passed to a Go command runner that executes the command in a bash sub-shell inside a docker container, checks the output and runs the tests.&lt;/li&gt;
+&lt;li&gt;Results are returned to the Lambda function, it writes them to DynamoDb and returns the response.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;The challenges are expressed in a single YAML, here an example of one challenge:&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  - slug: hello_world
+    version: 4
+    author: cmdchallenge
+    description: |
+      Print &amp;quot;hello world&amp;quot;.
+      Hint: There are many ways to print text on
+      the command line, one way is with the &amp;#39;echo&amp;#39;
+      command.
+
+      Try it below and good luck!
+    example: echo &amp;#39;hello world&amp;#39;
+    expected_output:
+      lines:
+        - &amp;#39;hello world&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;p/&gt; 
+Interested in coming up with your own? You can submit your own challenge which will be added to the user-contributed section of the site.&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Caching:&lt;/h2&gt;
+&lt;p&gt;You may notice that when you do &lt;code&gt;echo hello world&lt;/code&gt; on the &lt;a href="https://cmdchallenge.com/#/hello_world"&gt;hello world challenge&lt;/a&gt; it returns almost immediately.
+As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to prevent
+too many commands from being sent to the Docker container.
+API Gateway &lt;em&gt;can&lt;/em&gt; provide caching but it costs money, you can work around this by sticking CloudFront in front of it.* 
+With Cloudfront in front the cache-control header in 
+the response from Lambda is set to a very long cache lifetime with every request. 
+The version of the challenge as well as a global cache buster param is passed in so we never 
+have to worry about returning a response from a stale challenge.&lt;/p&gt;
+&lt;p&gt;&lt;i&gt;*Only for HTTP GET requests&lt;/i&gt;
+&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Performance:&lt;/h2&gt;
+&lt;p&gt;If you are wondering how well this would scale the Lambda function currently dispatches
+commands to a random host in a statically configured list of EC2 instances making it pretty easy
+to add more capacity. So far it seems to be operating fine with just one tiny server, however.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached cloudfront command&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached command in dynamoDB&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a co    &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Sat, 22 Apr 2017 00:00:00 -0400</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-04-22:/building-cmdchallenge.html</guid></item><item><title>figlet breakout</title><link>https://about.cmdchallenge.com/figlet-breakout.html</link><description>&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
 to dust off a 2 year old javascript project which created a breakout game from figlet
 fonts. Not quite a full re-write but fixed a lot of bugs and did away completely with
 coffee-script. More info on the &lt;a href="https://github.com/jarv/figlet-breakout"&gt;github page&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Or you can &lt;a href="https://www.jarv.org/figlet-breakout/#/click%20me%20to%20play"&gt;click here to play&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Fri, 24 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-24:figlet-breakout.html</guid></item><item><title>191 ways to echo hello world on the command line</title><link>https://about.cmdchallenge.com/191-hello-worlds.html</link><description>&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;, a weekend project
+&lt;p&gt;Or you can &lt;a href="https://www.jarv.org/figlet-breakout/#/click%20me%20to%20play"&gt;click here to play&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Fri, 24 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-24:/figlet-breakout.html</guid></item><item><title>191 ways to echo hello world on the command line</title><link>https://about.cmdchallenge.com/191-hello-worlds.html</link><description>&lt;p&gt;It's been about 12 days since the launch of &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;, a weekend project
 to create some common command-line tasks that can be done in a single line of bash.
 One common request has been to share user-submitted solutions. Or to put it another way,
 you may be wondering &lt;em&gt;what do random people on the internet and hackernews type if you give them
@@ -25,7 +156,7 @@ sed &lt;span class="s1"&gt;&amp;#39;s.\.\...;yhHh\hh;ywWw\ww;2,$d&amp;#39;&lt;/s
 &lt;li&gt;The directory itself was named &lt;code&gt;hello world&lt;/code&gt;.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Here are all of the correct submissions for the first challenge as of yesterday:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;d e h l o r w X &lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;7&lt;/span&gt; &lt;span class="m"&gt;6&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; 0&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt; i in &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="p"&gt;[@]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;tr X&lt;span class="se"&gt;\n&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;d e h l o r w X &lt;span class="se"&gt;\&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="o"&gt;=(&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;7&lt;/span&gt; &lt;span class="m"&gt;6&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt; &lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt; i in &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;s&lt;/span&gt;&lt;span class="p"&gt;[@]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;tr X&lt;span class="se"&gt;\n&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;
 &lt;span class="o"&gt;(&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; i in h e l l o &lt;span class="se"&gt;\ &lt;/span&gt; w o r l d &lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;awk -F, &lt;span class="s1"&gt;&amp;#39; {print $NR}&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt; &lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt;tr -d &lt;span class="se"&gt;\\&lt;/span&gt;n&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt;
 &lt;span class="k"&gt;for&lt;/span&gt; i in h e l l o&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="s2"&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; j in w o r l d&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;do&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="nv"&gt;$j&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="k"&gt;done&lt;/span&gt;
 cat README &lt;span class="p"&gt;|&lt;/span&gt; head -n &lt;span class="m"&gt;4&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; tail -n &lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; awk &lt;span class="s1"&gt;&amp;#39;{ print $3 &amp;quot; &amp;quot; $4 }&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sed -e &lt;span class="s1"&gt;&amp;#39;s/\&amp;quot;//g;s/\.//g&amp;#39;&lt;/span&gt;
@@ -136,97 +267,7 @@ touch &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span 
 &lt;span class="nv"&gt;i&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$i&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;%s&amp;#39;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
 cat &lt;span class="s"&gt;&amp;lt;&amp;lt;EOF\nhello world\nEOF&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; -- &lt;span class="s1"&gt;&amp;#39;hello world\n&amp;#39;&lt;/span&gt;
-cat &amp;lt;&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="sb"&gt;`&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="sb"&gt;`&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello %s&amp;#39;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello %s&amp;quot;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;%s&amp;quot;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;%s&amp;#39;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; -- &lt;span class="s2"&gt;&amp;quot;hello world\n&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;dlrow olleh&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; rev
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="si"&gt;${&lt;/span&gt;&lt;span class="nv"&gt;PWD&lt;/span&gt;&lt;span class="p"&gt;##*/&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;tr _ &lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world\013&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;%s &amp;#39;&lt;/span&gt; hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; cat
-/bin/echo &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-/bin/echo &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-cat - &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -e &lt;span class="s2"&gt;&amp;quot;hello world\n&amp;quot;&lt;/span&gt;
-&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="nv"&gt;$a&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; -- &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt; &lt;span class="se"&gt;\n&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-cat - &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-cat - &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world\n&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -ne &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;cat
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world\n&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world &lt;span class="p"&gt;|&lt;/span&gt; cat
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&amp;quot;hello world&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -n  &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-cat &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-/bin/echo hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; -e &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -e &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -n &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-cat &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; dlrow olleh&lt;span class="p"&gt;|&lt;/span&gt;rev
-&lt;span class="o"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;)&lt;/span&gt;
-cat &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="s1"&gt;&amp;#39;echo&amp;#39;&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt;   &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;hello world&lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-cat &lt;span class="o"&gt;&amp;lt;&amp;lt;&amp;lt;&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;hello world&lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -n hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt;  &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;printf&lt;/span&gt; hello&lt;span class="se"&gt;\ &lt;/span&gt;world
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;$&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world &amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world &amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;$&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt;  &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; -e hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world&lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello&lt;span class="se"&gt;\ &lt;/span&gt;world&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;hello world&amp;#39;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello   world
-&lt;span class="s1"&gt;&amp;#39;echo&amp;#39;&lt;/span&gt; hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world &lt;span class="se"&gt;\&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello&lt;span class="s1"&gt;&amp;#39; &amp;#39;&lt;/span&gt;world
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world&lt;span class="se"&gt;\&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world&lt;span class="p"&gt;;&lt;/span&gt;
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello &lt;span class="se"&gt;\w&lt;/span&gt;orld
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello  world
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello&lt;span class="se"&gt;\ &lt;/span&gt;world
-&lt;span class="nb"&gt;echo&lt;/span&gt;  hello world
-&lt;span class="nb"&gt;echo&lt;/span&gt; hello world
-&lt;/pre&gt;&lt;/div&gt;
-
-
-&lt;p&gt;&lt;br /&gt;&lt;/p&gt;
-&lt;p&gt;Of course there are a lot of quoting and space variations here as well. I will make a
-data-dump available soon with the responses for all challenges.&lt;/p&gt;
-&lt;p&gt;On the building and hosting side of things this is getting more than the usual tiny trickle of side-project internet traffic.
-So far I have tried to contain the entire thing in an AWS free tier account, it has worked out OK so far with a
-few hiccups here and there. Since several people have asked, I will share more details about how the site is put
-together in a future post, follow &lt;a href="https://twitter.com/thecmdchallenge"&gt;cmdchallenge on twitter&lt;/a&gt; or
-use &lt;a href="/rss.xml"&gt;rss&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Wed, 08 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-08:191-hello-worlds.html</guid></item><item><title>cmdchallenge - now with badges</title><link>https://about.cmdchallenge.com/now-with-badges.html</link><description>&lt;p&gt;&lt;img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png" /&gt;&lt;/p&gt;
+&lt;span class="nb"&gt;printf&lt;/span&gt; -- &lt;span class="s1"&gt;&amp;#39;hello world …&lt;/span&gt;&lt;/pre&gt;&lt;/div&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Wed, 08 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-08:/191-hello-worlds.html</guid></item><item><title>cmdchallenge - now with badges</title><link>https://about.cmdchallenge.com/now-with-badges.html</link><description>&lt;p&gt;&lt;img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png"&gt;&lt;/p&gt;
 &lt;p&gt;Just returned from an extended weekend of traveling and now finally getting to
 open questions and issues on the &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; site. Sorry
 for the slow responses.&lt;/p&gt;
@@ -236,5 +277,5 @@ computer to the next. If people want it I could add logins but it seems like it 
 than it is worth.  New challenges are coming in via pull requests (thanks!) and I think I will move
 the user-contributed ones into their own category soon. If you have more ideas please let me know
 via &lt;a href="https://twitter.com/thecmdchallenge"&gt;twitter&lt;/a&gt; or mail.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg" /&gt;&lt;/p&gt;
-&lt;p&gt;Now the back to work and back to cold weather...&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Tue, 07 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-07:now-with-badges.html</guid></item></channel></rss>
+&lt;p&gt;&lt;img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;Now the back to work and back to cold weather...&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Tue, 07 Feb 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-02-07:/now-with-badges.html</guid></item></channel></rss>
