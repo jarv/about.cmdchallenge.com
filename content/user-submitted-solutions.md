@@ -16,8 +16,9 @@ pulling an IP address out of a file:
 Also scrolling down the page of [solutions to the corrupted text problem](https://cmdchallenge.com/s/#/corrupted_text)
 is glorious.
 
-The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
-more, let me know on [twitter](https://twitter.com/thecmdchallenge) and also feel free to submit suggestions for
+<s>The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
+more, let me know on [twitter](https://twitter.com/thecmdchallenge) and also</s> **Update**: Solutions are now generated every
+five minutes. Feel free to submit suggestions for
 new challenges on [github](https://github.com/jarv/cmdchallenge).
 
 

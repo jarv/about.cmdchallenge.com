@@ -39,7 +39,7 @@
     </header>
     <footer class="post-info">
       <abbr>
-        Sat 22 April 2017 
+        Mon 24 April 2017 
       </abbr>
     </footer><!-- /.post-info -->
     <div class="entry-content">
@@ -153,29 +153,36 @@ use a certificate from ACM and cache requests.</p>
 
 
 <p><p/> 
-Interested in coming up with your own? You can submit your own challenge which will be added to the user-contributed section of the site.</p>
+Interested in coming up with your own? You can submit your own challenge with a <a href="https://github.com/jarv/cmdchallenge/pulls">pull request</a>. Your challenge will be added to the user-contributed section of the site.</p>
 <p><p/> </p>
 <h2>Caching:</h2>
 <p>You may notice that when you do <code>echo hello world</code> on the <a href="https://cmdchallenge.com/#/hello_world">hello world challenge</a> it returns almost immediately.
-As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to prevent
-too many commands from being sent to the Docker container.
-API Gateway <em>can</em> provide caching but it costs money, you can work around this by sticking CloudFront in front of it.* 
+As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to reduce
+the number of command executions on the Docker container.
+API Gateway <em>can</em> provide caching but it costs money, I worked around this by sticking CloudFront in front of it but this
+is only possible with HTTP GETs.
 With Cloudfront in front the cache-control header in 
 the response from Lambda is set to a very long cache lifetime with every request. 
 The version of the challenge as well as a global cache buster param is passed in so we never 
 have to worry about returning a response from a stale challenge.</p>
-<p><i>*Only for HTTP GET requests</i>
-<p/> </p>
-<h2>Performance:</h2>
-<p>If you are wondering how well this would scale the Lambda function currently dispatches
-commands to a random host in a statically configured list of EC2 instances making it pretty easy
-to add more capacity. So far it seems to be operating fine with just one tiny server, however.</p>
-<ul>
-<li>Time to get a <code>echo hello world</code> response from a cached cloudfront command</li>
-<li>Time to get a <code>echo hello world</code> response from a cached command in dynamoDB</li>
-<li>Time to get a <code>echo hello world</code> response from a co    </li>
-</ul>
 <p><p/> </p>
+<h2>Performance:</h2>
+<p>If you are wondering how well this would scale for a lot of traffic, the Lambda function currently dispatches
+commands to a random host in a statically configured list of EC2 instances making it pretty easy
+to add more capacity. So far it seems to be operating fine with a single t2.micro EC2 instance handling
+all command requests that are not cached.</p>
+<ul>
+<li>Time to get a <code>echo hello world</code> response from a cached cloudfront command - <strong>~50ms</strong></li>
+<li>Time to get a <code>echo hello world</code> response from a cached command in dynamoDB - <strong>~2.5s</strong></li>
+<li>Time to get a <code>echo hello world</code> response, executed in a container - <strong>~4s</strong>   </li>
+</ul>
+<p>Without caching this wouldn't be possible and also the caching at CloudFront enables most commands to
+return fairly quickly.
+<p/> </p>
+<h2>Wrapping up</h2>
+<p>If you like the site please follow <a href="https://twitter.com/thecmdchallenge">@thecmdchallenge</a> on twitter or if you have
+suggestions drop me a mail at <a href="mailto:info@cmdchallenge.com">info@cmdchallenge.com</a>.</p>
+<p>Thanks!</p>
     </div><!-- /.entry-content -->
   </div>
 </section>
@@ -183,6 +190,7 @@ to add more capacity. So far it seems to be operating fine with just one tiny se
     </div>
     <footer id="page-footer">
       <div>Created with <a href="https://github.com/getpelican/pelican">Pelican</a> using the <a href="https://github.com/jarv/about.cmdchallenge.com">cmdchallenge</a> theme.</div>
+      <div>The posts on this page represent my views and opinions do not represent those of my employer.</div>
     </footer>
 <script>
 				(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){

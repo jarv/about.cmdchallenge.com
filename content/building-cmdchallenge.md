@@ -1,5 +1,5 @@
 Title: Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go
-Date: 2017-04-22
+Date: 2017-04-24
 Slug: building-cmdchallenge
 
 Have you ever thought about building a side-project for fun without spending a lot on hosting?
@@ -125,32 +125,42 @@ One nice thing about using AWS server-less components was that **a single t2.mic
 ```
 
 <p/> 
-Interested in coming up with your own? You can submit your own challenge which will be added to the user-contributed section of the site.
+Interested in coming up with your own? You can submit your own challenge with a [pull request](https://github.com/jarv/cmdchallenge/pulls). Your challenge will be added to the user-contributed section of the site.
 
 <p/> 
 ## Caching:
 
 You may notice that when you do `echo hello world` on the [hello world challenge](https://cmdchallenge.com/#/hello_world) it returns almost immediately.
-As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to prevent
-too many commands from being sent to the Docker container.
-API Gateway *can* provide caching but it costs money, you can work around this by sticking CloudFront in front of it.* 
+As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to reduce
+the number of command executions on the Docker container.
+API Gateway *can* provide caching but it costs money, I worked around this by sticking CloudFront in front of it but this
+is only possible with HTTP GETs.
 With Cloudfront in front the cache-control header in 
 the response from Lambda is set to a very long cache lifetime with every request. 
 The version of the challenge as well as a global cache buster param is passed in so we never 
 have to worry about returning a response from a stale challenge.
 
-<i>*Only for HTTP GET requests</i>
 <p/> 
 ## Performance:
 
-If you are wondering how well this would scale the Lambda function currently dispatches
+If you are wondering how well this would scale for a lot of traffic, the Lambda function currently dispatches
 commands to a random host in a statically configured list of EC2 instances making it pretty easy
-to add more capacity. So far it seems to be operating fine with just one tiny server, however.
+to add more capacity. So far it seems to be operating fine with a single t2.micro EC2 instance handling
+all command requests that are not cached.
 
-* Time to get a `echo hello world` response from a cached cloudfront command
-* Time to get a `echo hello world` response from a cached command in dynamoDB
-* Time to get a `echo hello world` response from a co    
+* Time to get a `echo hello world` response from a cached cloudfront command - **~50ms**
+* Time to get a `echo hello world` response from a cached command in dynamoDB - **~2.5s**
+* Time to get a `echo hello world` response, executed in a container - **~4s**   
 
+Without caching this wouldn't be possible and also the caching at CloudFront enables most commands to
+return fairly quickly.
 <p/> 
+
+## Wrapping up
+
+If you like the site please follow [@thecmdchallenge](https://twitter.com/thecmdchallenge) on twitter or if you have
+suggestions drop me a mail at <a href="mailto:info@cmdchallenge.com">info@cmdchallenge.com</a>.
+
+Thanks!
 
 

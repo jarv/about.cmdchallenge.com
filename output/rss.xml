@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Sat, 22 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link>https://about.cmdchallenge.com/building-cmdchallenge.html</link><description>&lt;p&gt;Have you ever thought about building a side-project for fun without spending a lot on hosting?
+<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Mon, 24 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link>https://about.cmdchallenge.com/building-cmdchallenge.html</link><description>&lt;p&gt;Have you ever thought about building a side-project for fun without spending a lot on hosting?
 This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
 a quick overview of how &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge.com&lt;/a&gt; is built.
 The site is a simple web application side-project that executes shell commands
@@ -109,29 +109,36 @@ use a certificate from ACM and cache requests.&lt;/p&gt;
 
 
 &lt;p&gt;&lt;p/&gt; 
-Interested in coming up with your own? You can submit your own challenge which will be added to the user-contributed section of the site.&lt;/p&gt;
+Interested in coming up with your own? You can submit your own challenge with a &lt;a href="https://github.com/jarv/cmdchallenge/pulls"&gt;pull request&lt;/a&gt;. Your challenge will be added to the user-contributed section of the site.&lt;/p&gt;
 &lt;p&gt;&lt;p/&gt; &lt;/p&gt;
 &lt;h2&gt;Caching:&lt;/h2&gt;
 &lt;p&gt;You may notice that when you do &lt;code&gt;echo hello world&lt;/code&gt; on the &lt;a href="https://cmdchallenge.com/#/hello_world"&gt;hello world challenge&lt;/a&gt; it returns almost immediately.
-As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to prevent
-too many commands from being sent to the Docker container.
-API Gateway &lt;em&gt;can&lt;/em&gt; provide caching but it costs money, you can work around this by sticking CloudFront in front of it.* 
+As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to reduce
+the number of command executions on the Docker container.
+API Gateway &lt;em&gt;can&lt;/em&gt; provide caching but it costs money, I worked around this by sticking CloudFront in front of it but this
+is only possible with HTTP GETs.
 With Cloudfront in front the cache-control header in 
 the response from Lambda is set to a very long cache lifetime with every request. 
 The version of the challenge as well as a global cache buster param is passed in so we never 
 have to worry about returning a response from a stale challenge.&lt;/p&gt;
-&lt;p&gt;&lt;i&gt;*Only for HTTP GET requests&lt;/i&gt;
-&lt;p/&gt; &lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
 &lt;h2&gt;Performance:&lt;/h2&gt;
-&lt;p&gt;If you are wondering how well this would scale the Lambda function currently dispatches
+&lt;p&gt;If you are wondering how well this would scale for a lot of traffic, the Lambda function currently dispatches
 commands to a random host in a statically configured list of EC2 instances making it pretty easy
-to add more capacity. So far it seems to be operating fine with just one tiny server, however.&lt;/p&gt;
+to add more capacity. So far it seems to be operating fine with a single t2.micro EC2 instance handling
+all command requests that are not cached.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached cloudfront command&lt;/li&gt;
-&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached command in dynamoDB&lt;/li&gt;
-&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a co    &lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached cloudfront command - &lt;strong&gt;~50ms&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached command in dynamoDB - &lt;strong&gt;~2.5s&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response, executed in a container - &lt;strong&gt;~4s&lt;/strong&gt;   &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;p/&gt; &lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Sat, 22 Apr 2017 00:00:00 -0400</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-04-22:building-cmdchallenge.html</guid></item><item><title>User Submitted Solutions</title><link>https://about.cmdchallenge.com/user-submitted-solutions.html</link><description>&lt;p&gt;Adding to the interesting &lt;a href="/191-hello-worlds.html"&gt;191 ways to echo hello world&lt;/a&gt; I've now added the ability
+&lt;p&gt;Without caching this wouldn't be possible and also the caching at CloudFront enables most commands to
+return fairly quickly.
+&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;If you like the site please follow &lt;a href="https://twitter.com/thecmdchallenge"&gt;@thecmdchallenge&lt;/a&gt; on twitter or if you have
+suggestions drop me a mail at &lt;a href="mailto:info@cmdchallenge.com"&gt;info@cmdchallenge.com&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Thanks!&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Mon, 24 Apr 2017 00:00:00 -0400</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-04-24:building-cmdchallenge.html</guid></item><item><title>User Submitted Solutions</title><link>https://about.cmdchallenge.com/user-submitted-solutions.html</link><description>&lt;p&gt;Adding to the interesting &lt;a href="/191-hello-worlds.html"&gt;191 ways to echo hello world&lt;/a&gt; I've now added the ability
 to see &lt;a href="https://cmdchallenge.com/s/"&gt;user-submitted solutions&lt;/a&gt; to &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;There are some gems if you dig through them including maybe the longest regex I've ever seen for
 pulling an IP address out of a file:&lt;/p&gt;
@@ -141,8 +148,9 @@ pulling an IP address out of a file:&lt;/p&gt;
 
 &lt;p&gt;Also scrolling down the page of &lt;a href="https://cmdchallenge.com/s/#/corrupted_text"&gt;solutions to the corrupted text problem&lt;/a&gt;
 is glorious.&lt;/p&gt;
-&lt;p&gt;The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
-more, let me know on &lt;a href="https://twitter.com/thecmdchallenge"&gt;twitter&lt;/a&gt; and also feel free to submit suggestions for
+&lt;p&gt;&lt;s&gt;The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
+more, let me know on &lt;a href="https://twitter.com/thecmdchallenge"&gt;twitter&lt;/a&gt; and also&lt;/s&gt; &lt;strong&gt;Update&lt;/strong&gt;: Solutions are now generated every
+five minutes. Feel free to submit suggestions for
 new challenges on &lt;a href="https://github.com/jarv/cmdchallenge"&gt;github&lt;/a&gt;.&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Sat, 04 Mar 2017 00:00:00 -0500</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-03-04:user-submitted-solutions.html</guid></item><item><title>figlet breakout</title><link>https://about.cmdchallenge.com/figlet-breakout.html</link><description>&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
 to dust off a 2 year old javascript project which created a breakout game from figlet
 fonts. Not quite a full re-write but fixed a lot of bugs and did away completely with
