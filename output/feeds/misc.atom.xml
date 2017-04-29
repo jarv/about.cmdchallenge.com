@@ -1,5 +1,157 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>cmdchallenge</title><link href="https://about.cmdchallenge.com/" rel="alternate"></link><link href="https://about.cmdchallenge.com/feeds/misc.atom.xml" rel="self"></link><id>https://about.cmdchallenge.com/</id><updated>2017-02-24T00:00:00-05:00</updated><entry><title>figlet breakout</title><link href="https://about.cmdchallenge.com/figlet-breakout.html" rel="alternate"></link><published>2017-02-24T00:00:00-05:00</published><updated>2017-02-24T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-24:figlet-breakout.html</id><summary type="html">&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
+<feed xmlns="http://www.w3.org/2005/Atom"><title>cmdchallenge</title><link href="https://about.cmdchallenge.com/" rel="alternate"></link><link href="https://about.cmdchallenge.com/feeds/misc.atom.xml" rel="self"></link><id>https://about.cmdchallenge.com/</id><updated>2017-04-24T00:00:00-04:00</updated><entry><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link href="https://about.cmdchallenge.com/building-cmdchallenge.html" rel="alternate"></link><published>2017-04-24T00:00:00-04:00</published><updated>2017-04-24T00:00:00-04:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-04-24:building-cmdchallenge.html</id><summary type="html">&lt;p&gt;Have you ever thought about building a side-project for fun without spending a lot on hosting?
+This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
+a quick overview of how &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge.com&lt;/a&gt; is built.
+The site is a simple web application side-project that executes shell commands
+remotely in a docker container in AWS. The front-end gives the feeling of a normal terminal but underneath
+it is sending whatever commands you give it remotely on an EC2 instance inside a Docker container.&lt;/p&gt;
+&lt;p&gt;The source code for most of it is located &lt;a href="https://github.com/jarv/cmdchallenge"&gt;on github&lt;/a&gt; including
+ a tiny command executer written in Go, the challenge definitions, and a test harness.&lt;/p&gt;
+&lt;p&gt;The following AWS services are used for the site:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Cloudfront&lt;/li&gt;
+&lt;li&gt;API Gateway&lt;/li&gt;
+&lt;li&gt;S3 bucket&lt;/li&gt;
+&lt;li&gt;Lambda function&lt;/li&gt;
+&lt;li&gt;DynamoDB&lt;/li&gt;
+&lt;li&gt;t2.micro EC2 Instance running coreos&lt;/li&gt;
+&lt;li&gt;CloudWatch logs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;p&gt;In addition to this Amazon Certificate Manager and Route53 was used but for everything above you can keep costs close to zero in AWS. There is no free tier for Route53 (sad panda) but it's like 50 cents a month for a single zone.&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Features:&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Submit commands, execute them in a bash sub-shell.&lt;/li&gt;
+&lt;li&gt;Check the output of the command for different challenges.&lt;/li&gt;
+&lt;li&gt;Run tests for challenges that need them in addition or in place of checking output.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Deployment tools (simple and boring):&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Makefiles.&lt;/li&gt;
+&lt;li&gt;Python fabric for running commands and copying files over ssh.&lt;/li&gt;
+&lt;li&gt;Kappa, zips up code, sends it to lambda, also manages Lambda permissions.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt;
+With these tools the following automated steps are taken to deploy the site:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Create a Docker image that holds the challenges.&lt;/li&gt;
+&lt;li&gt;Launch a new coreos EC2 instance.&lt;/li&gt;
+&lt;li&gt;Run a fabric script that does the following on the instance over SSH:&lt;ul&gt;
+&lt;li&gt;Configures TLS so that a Lambda function can communicate to Docker on an EC2 instance.&lt;/li&gt;
+&lt;li&gt;Executes some periodic commands to ensure that the host cleans up old containers.&lt;/li&gt;
+&lt;li&gt;Downloads the docker image that has the challenges.&lt;/li&gt;
+&lt;li&gt;Copies the read-only volume that is used on the container for the tests and command runner.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Update Lambda with new code.&lt;/li&gt;
+&lt;li&gt;Sync the static assets to S3.&lt;/li&gt;
+&lt;li&gt;Invalidates CF cache for the main site.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Architecture diagram:&lt;/h2&gt;
+&lt;p&gt;There are two public entry points for the site, one is the main web-site which is static and served S3. 
+The other is the API gateway at api.cmdchallenge.com which is also fronted by CloudFront so that it can
+use a certificate from ACM and cache requests.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  api.cmdchallenge.com         cmdchallenge.com
+  ********************         ****************
++---------------------+    +---------------------+ 
+|      Cloudfront     |    |      Cloudfront     |   
++---------------------+    +---------------------+  
+           |                          | 
++---------------------+         +-----------+
+|    API Gateway      |         | s3 bucket |
++---------------------+         +-----------+
+           |
+  +-----------------+
+  |                 |
+  | Lambda Function |    +----------+
+  |                 |--- |          |
+  +-----------------+   \| DynamoDB |
+           |             |          |
+   +--------------+      +----------+
+   | EC2 t2.micro |
+   |   (coreos)   |
+   +--------------+
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;p&gt;One nice thing about using AWS server-less components was that &lt;strong&gt;a single t2.micro instance ended up being fine for handling all of the load, even at peak.&lt;/strong&gt;&lt;br /&gt;
+&lt;em&gt;See section on caching/performance below.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Here is what happens when a command is submitted in the &lt;a href="cmdchallenge.com terminal"&gt;cmdchallenge.com&lt;/a&gt;:&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Javascript code sends an HTTP GET to https://api.cmdchallenge.com&lt;/li&gt;
+&lt;li&gt;If it is cached it returns a response immediately. If not, it forwards the request to the API gateway which in turn sends it to a Lambda function.&lt;/li&gt;
+&lt;li&gt;The Lambda function looks up the challenge and the command in DynamoDb and if it already has an answer it returns that. If the challenge doesn't exist in DyamoDB it is forwarded to the EC2 instance as a command using the docker API.&lt;/li&gt;
+&lt;li&gt;The command that the user provides is passed to a Go command runner that executes the command in a bash sub-shell inside a docker container, checks the output and runs the tests.&lt;/li&gt;
+&lt;li&gt;Results are returned to the Lambda function, it writes them to DynamoDb and returns the response.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;The challenges are expressed in a single YAML, here an example of one challenge:&lt;/h2&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  - slug: hello_world
+    version: 4
+    author: cmdchallenge
+    description: |
+      Print &amp;quot;hello world&amp;quot;.
+      Hint: There are many ways to print text on
+      the command line, one way is with the &amp;#39;echo&amp;#39;
+      command.
+
+      Try it below and good luck!
+    example: echo &amp;#39;hello world&amp;#39;
+    expected_output:
+      lines:
+        - &amp;#39;hello world&amp;#39;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;p/&gt; 
+Interested in coming up with your own? You can submit your own challenge with a &lt;a href="https://github.com/jarv/cmdchallenge/pulls"&gt;pull request&lt;/a&gt;. Your challenge will be added to the user-contributed section of the site.&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Caching:&lt;/h2&gt;
+&lt;p&gt;You may notice that when you do &lt;code&gt;echo hello world&lt;/code&gt; on the &lt;a href="https://cmdchallenge.com/#/hello_world"&gt;hello world challenge&lt;/a&gt; it returns almost immediately.
+As it is shown above there are two layers of cache, one at CloudFront and one at DynamoDb to reduce
+the number of command executions on the Docker container.
+API Gateway &lt;em&gt;can&lt;/em&gt; provide caching but it costs money, I worked around this by sticking CloudFront in front of it but this
+is only possible with HTTP GETs.
+With Cloudfront in front the cache-control header in 
+the response from Lambda is set to a very long cache lifetime with every request. 
+The version of the challenge as well as a global cache buster param is passed in so we never 
+have to worry about returning a response from a stale challenge.&lt;/p&gt;
+&lt;p&gt;&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Performance:&lt;/h2&gt;
+&lt;p&gt;If you are wondering how well this would scale for a lot of traffic, the Lambda function currently dispatches
+commands to a random host in a statically configured list of EC2 instances making it pretty easy
+to add more capacity. So far it seems to be operating fine with a single t2.micro EC2 instance handling
+all command requests that are not cached.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached cloudfront command - &lt;strong&gt;~50ms&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response from a cached command in dynamoDB - &lt;strong&gt;~2.5s&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;Time to get a &lt;code&gt;echo hello world&lt;/code&gt; response, executed in a container - &lt;strong&gt;~4s&lt;/strong&gt;   &lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Without caching this wouldn't be possible and also the caching at CloudFront enables most commands to
+return fairly quickly.
+&lt;p/&gt; &lt;/p&gt;
+&lt;h2&gt;Wrapping up&lt;/h2&gt;
+&lt;p&gt;If you like the site please follow &lt;a href="https://twitter.com/thecmdchallenge"&gt;@thecmdchallenge&lt;/a&gt; on twitter or if you have
+suggestions drop me a mail at &lt;a href="mailto:info@cmdchallenge.com"&gt;info@cmdchallenge.com&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Thanks!&lt;/p&gt;</summary></entry><entry><title>User Submitted Solutions</title><link href="https://about.cmdchallenge.com/user-submitted-solutions.html" rel="alternate"></link><published>2017-03-04T00:00:00-05:00</published><updated>2017-03-04T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-03-04:user-submitted-solutions.html</id><summary type="html">&lt;p&gt;Adding to the interesting &lt;a href="/191-hello-worlds.html"&gt;191 ways to echo hello world&lt;/a&gt; I've now added the ability
+to see &lt;a href="https://cmdchallenge.com/s/"&gt;user-submitted solutions&lt;/a&gt; to &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;There are some gems if you dig through them including maybe the longest regex I've ever seen for
+pulling an IP address out of a file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;25&lt;span class="o"&gt;[&lt;/span&gt;0-5&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;2&lt;span class="o"&gt;[&lt;/span&gt;0-4&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;01&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;[&lt;/span&gt;0-9&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="se"&gt;\.&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;25&lt;span class="o"&gt;[&lt;/span&gt;0-5&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;2&lt;span class="o"&gt;[&lt;/span&gt;0-4&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;01&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;[&lt;/span&gt;0-9&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="se"&gt;\.&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;25&lt;span class="o"&gt;[&lt;/span&gt;0-5&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;2&lt;span class="o"&gt;[&lt;/span&gt;0-4&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;01&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;[&lt;/span&gt;0-9&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="se"&gt;\.&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;25&lt;span class="o"&gt;[&lt;/span&gt;0-5&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;2&lt;span class="o"&gt;[&lt;/span&gt;0-4&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;01&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;[&lt;/span&gt;0-9&lt;span class="o"&gt;][&lt;/span&gt;0-9&lt;span class="o"&gt;]&lt;/span&gt;?&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Also scrolling down the page of &lt;a href="https://cmdchallenge.com/s/#/corrupted_text"&gt;solutions to the corrupted text problem&lt;/a&gt;
+is glorious.&lt;/p&gt;
+&lt;p&gt;&lt;s&gt;The solutions are not updated regularly right now but would be easy enough to do in the future if people want to see
+more, let me know on &lt;a href="https://twitter.com/thecmdchallenge"&gt;twitter&lt;/a&gt; and also&lt;/s&gt; &lt;strong&gt;Update&lt;/strong&gt;: Solutions are now generated every
+five minutes. Feel free to submit suggestions for
+new challenges on &lt;a href="https://github.com/jarv/cmdchallenge"&gt;github&lt;/a&gt;.&lt;/p&gt;</summary></entry><entry><title>figlet breakout</title><link href="https://about.cmdchallenge.com/figlet-breakout.html" rel="alternate"></link><published>2017-02-24T00:00:00-05:00</published><updated>2017-02-24T00:00:00-05:00</updated><author><name>jarv</name></author><id>tag:about.cmdchallenge.com,2017-02-24:figlet-breakout.html</id><summary type="html">&lt;p&gt;I was looking for a cool ending for &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge&lt;/a&gt; and decided
 to dust off a 2 year old javascript project which created a breakout game from figlet
 fonts. Not quite a full re-write but fixed a lot of bugs and did away completely with
 coffee-script. More info on the &lt;a href="https://github.com/jarv/figlet-breakout"&gt;github page&lt;/a&gt;.&lt;/p&gt;
