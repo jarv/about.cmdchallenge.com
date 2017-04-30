@@ -1,5 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Mon, 24 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link>https://about.cmdchallenge.com/building-cmdchallenge.html</link><description>&lt;p&gt;Have you ever thought about building a side-project for fun without spending a lot on hosting?
+<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Sun, 30 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Adding checks against random data for shell submissions</title><link>https://about.cmdchallenge.com/randomizers.html</link><description>&lt;p&gt;One of the nice features of coding challenge sites like &lt;a href="https://hackerrank.com"&gt;hackerrank&lt;/a&gt; is that
+when you submit an algorithm it will also be checked against random data. This
+validates the performance of the algorithm and will test it against different inputs.
+&lt;a href="https://cmdchallenge.com"&gt;CMD Challenge&lt;/a&gt; is a web application that executes shell commands
+remotely in a Docker container. When it was initially
+launched, all the checker did was validate the output of the execution
+against a list of strings, expressed in YAML.&lt;/p&gt;
+&lt;p&gt;For example, the &lt;a href="https://cmdchallenge.com/#/hello_world"&gt;"hello world" challenge&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;slug&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;hello_world&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;description&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="p p-Indicator"&gt;|&lt;/span&gt;
+      &lt;span class="no"&gt;Print &amp;quot;hello world&amp;quot;.&lt;/span&gt;
+      &lt;span class="no"&gt;Hint: There are many ways to print text on&lt;/span&gt;
+      &lt;span class="no"&gt;the command line, one way is with the &amp;#39;echo&amp;#39;&lt;/span&gt;
+      &lt;span class="no"&gt;command.&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;expected_output&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+      &lt;span class="l l-Scalar l-Scalar-Plain"&gt;lines&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+        &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;hello&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;world&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;When the user submits "&lt;code&gt;echo hello world&lt;/code&gt;" the command is executed remotely and
+the response is validated against the string "&lt;code&gt;hello world&lt;/code&gt;". This worked fine for commands
+that only needed to be verified by checking their output, but what about commands that
+modify files on disk? For these types of challenges there are a
+&lt;a href="https://github.com/jarv/cmdchallenge/tree/master/ro_volume/cmdtests"&gt;a set of shell scripts&lt;/a&gt;
+that also run inside the container and will return non-zero if any of pre-determined tests fail.
+This is how the &lt;a href="https://cmdchallenge.com/#/delete_files"&gt;"delete files"&lt;/a&gt;,
+&lt;a href="https://cmdchallenge.com/#/remove_files_with_extension"&gt;"remove files with extension"&lt;/a&gt;
+challenges and other similar ones work to ensure the bash one-line command you entered
+is correct.&lt;/p&gt;
+&lt;p&gt;This solves most of the validation but what about this challenge?&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;slug&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;sum_all_numbers&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;description&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="p p-Indicator"&gt;|&lt;/span&gt;
+      &lt;span class="no"&gt;The file sum-me.txt has a list of numbers,&lt;/span&gt;
+      &lt;span class="no"&gt;one per line. Print the sum of these numbers.&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;expected_output&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+      &lt;span class="l l-Scalar l-Scalar-Plain"&gt;lines&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+        &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;42&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;One way you can "trick" the site is to simply enter the command "&lt;code&gt;echo 42&lt;/code&gt;" which
+is the correct sum of the numbers in "&lt;code&gt;sum-me.txt&lt;/code&gt;".
+In fact, a lot of random internet people did exactly that
+as you can see from a small subset of submissions that were previously
+marked as "correct":&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; 42
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;42&amp;#39;&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;42&amp;quot;&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;4&amp;quot;&amp;quot;2&amp;quot;&lt;/span&gt;
+expr &lt;span class="m"&gt;41&lt;/span&gt; + 1
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="k"&gt;$((&lt;/span&gt; &lt;span class="m"&gt;29&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="m"&gt;13&lt;/span&gt;&lt;span class="k"&gt;))&lt;/span&gt;
+etc. etc.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;So the next natural thing to do is to add a way to randomize the data that the
+command is operating on. Just like scripts added to run tests, now there are
+bash scripts for every challenge that allow you to manipulate files before
+running the command again.  Only if the output is still correct 
+(and tests pass, if they are present) will
+then the challenge be marked as correct.&lt;/p&gt;
+&lt;p&gt;For example, for the &lt;a href="https://cmdchallenge.com/#/sum_all_numbers"&gt;"sum all numbers"&lt;/a&gt; challenge
+the script looks like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/bin/bash&lt;/span&gt;
+&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="k"&gt;$((&lt;/span&gt; &lt;span class="nv"&gt;$RANDOM&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="m"&gt;1000&lt;/span&gt; &lt;span class="k"&gt;))&lt;/span&gt; &amp;gt;&amp;gt; sum-me.txt
+paste -sd+ sum-me.txt &lt;span class="p"&gt;|&lt;/span&gt; bc
+&lt;span class="nb"&gt;exit&lt;/span&gt; 0
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div style="float: right;margin-right: 1em; margin-left: .5em;"&gt;
+    &lt;a href="https://cmdchallenge.com/#/sum_all_numbers"&gt;&lt;img src="https://i.imgur.com/rkqKXjW.png" alt="randomizers" /&gt;&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Now if you type the command "&lt;code&gt;echo 42&lt;/code&gt;" the randomizer check will fail since will also verify that
+the command can run against the modified "&lt;code&gt;sum-me.txt&lt;/code&gt;" file.
+Currently, there are a randomizer scripts added for a subset of challenges.
+If you want to contribute and add more please feel free to send a &lt;a href="https://github.com/jarv/cmdchallenge/pulls"&gt;pull request&lt;/a&gt;.
+If you would like to
+read some more about how the site is built in an AWS free tier account see the earlier post on 
+&lt;a href="/building-cmdchallenge.html"&gt;building cmdchallenge&lt;/a&gt;. If you liked this write up let me know
+by following &lt;a href="https://twitter.com/thecmdchallenge"&gt;@thecmdchallenge&lt;/a&gt; on twitter or drop
+me mail at &lt;a href="mailto:info@cmdchallenge.com"&gt;info@cmdchallenge.com&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Thanks!&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Sun, 30 Apr 2017 00:00:00 -0400</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-04-30:randomizers.html</guid></item><item><title>Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</title><link>https://about.cmdchallenge.com/building-cmdchallenge.html</link><description>&lt;p&gt;Have you ever thought about building a side-project for fun without spending a lot on hosting?
 This post might be for you. With the most tech-buzz-wordy title I could conjure up here is 
 a quick overview of how &lt;a href="https://cmdchallenge.com"&gt;cmdchallenge.com&lt;/a&gt; is built.
 The site is a simple web application side-project that executes shell commands
@@ -91,20 +175,20 @@ use a certificate from ACM and cache requests.&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;p/&gt; &lt;/p&gt;
 &lt;h2&gt;The challenges are expressed in a single YAML, here an example of one challenge:&lt;/h2&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  - slug: hello_world
-    version: 4
-    author: cmdchallenge
-    description: |
-      Print &amp;quot;hello world&amp;quot;.
-      Hint: There are many ways to print text on
-      the command line, one way is with the &amp;#39;echo&amp;#39;
-      command.
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;  &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;slug&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;hello_world&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;version&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;4&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;author&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;cmdchallenge&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;description&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="p p-Indicator"&gt;|&lt;/span&gt;
+      &lt;span class="no"&gt;Print &amp;quot;hello world&amp;quot;.&lt;/span&gt;
+      &lt;span class="no"&gt;Hint: There are many ways to print text on&lt;/span&gt;
+      &lt;span class="no"&gt;the command line, one way is with the &amp;#39;echo&amp;#39;&lt;/span&gt;
+      &lt;span class="no"&gt;command.&lt;/span&gt;
 
-      Try it below and good luck!
-    example: echo &amp;#39;hello world&amp;#39;
-    expected_output:
-      lines:
-        - &amp;#39;hello world&amp;#39;
+      &lt;span class="no"&gt;Try it below and good luck!&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;example&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt; &lt;span class="l l-Scalar l-Scalar-Plain"&gt;echo &amp;#39;hello world&amp;#39;&lt;/span&gt;
+    &lt;span class="l l-Scalar l-Scalar-Plain"&gt;expected_output&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+      &lt;span class="l l-Scalar l-Scalar-Plain"&gt;lines&lt;/span&gt;&lt;span class="p p-Indicator"&gt;:&lt;/span&gt;
+        &lt;span class="p p-Indicator"&gt;-&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;hello&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;world&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 

@@ -41,6 +41,109 @@
             <div class="post-content">
               <header> 
                 <h1 class="content-entry-title">
+                    <a href="../randomizers.html" rel="bookmark" title="Permalink to Adding checks against random data for shell submissions">Adding checks against random data for shell submissions</a>
+                </h1> 
+              </header>
+              <footer class="post-info">
+                <abbr>
+                  Sun 30 April 2017 
+                </abbr>
+              </footer><!-- /.post-info -->
+              <div class="entry-content entry-content-summary"> <p>One of the nice features of coding challenge sites like <a href="https://hackerrank.com">hackerrank</a> is that
+when you submit an algorithm it will also be checked against random data. This
+validates the performance of the algorithm and will test it against different inputs.
+<a href="https://cmdchallenge.com">CMD Challenge</a> is a web application that executes shell commands
+remotely in a Docker container. When it was initially
+launched, all the checker did was validate the output of the execution
+against a list of strings, expressed in YAML.</p>
+<p>For example, the <a href="https://cmdchallenge.com/#/hello_world">"hello world" challenge</a>:</p>
+<div class="highlight"><pre><span></span>  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">slug</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">hello_world</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">Print &quot;hello world&quot;.</span>
+      <span class="no">Hint: There are many ways to print text on</span>
+      <span class="no">the command line, one way is with the &#39;echo&#39;</span>
+      <span class="no">command.</span>
+    <span class="l l-Scalar l-Scalar-Plain">expected_output</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">lines</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;hello</span><span class="nv"> </span><span class="s">world&#39;</span>
+</pre></div>
+
+
+<p>When the user submits "<code>echo hello world</code>" the command is executed remotely and
+the response is validated against the string "<code>hello world</code>". This worked fine for commands
+that only needed to be verified by checking their output, but what about commands that
+modify files on disk? For these types of challenges there are a
+<a href="https://github.com/jarv/cmdchallenge/tree/master/ro_volume/cmdtests">a set of shell scripts</a>
+that also run inside the container and will return non-zero if any of pre-determined tests fail.
+This is how the <a href="https://cmdchallenge.com/#/delete_files">"delete files"</a>,
+<a href="https://cmdchallenge.com/#/remove_files_with_extension">"remove files with extension"</a>
+challenges and other similar ones work to ensure the bash one-line command you entered
+is correct.</p>
+<p>This solves most of the validation but what about this challenge?</p>
+<div class="highlight"><pre><span></span>  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">slug</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">sum_all_numbers</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">The file sum-me.txt has a list of numbers,</span>
+      <span class="no">one per line. Print the sum of these numbers.</span>
+    <span class="l l-Scalar l-Scalar-Plain">expected_output</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">lines</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="s">&quot;42&quot;</span>
+</pre></div>
+
+
+<p>One way you can "trick" the site is to simply enter the command "<code>echo 42</code>" which
+is the correct sum of the numbers in "<code>sum-me.txt</code>".
+In fact, a lot of random internet people did exactly that
+as you can see from a small subset of submissions that were previously
+marked as "correct":</p>
+<div class="highlight"><pre><span></span><span class="nb">echo</span> 42
+<span class="nb">echo</span> <span class="s1">&#39;42&#39;</span>
+<span class="nb">echo</span> <span class="s2">&quot;42&quot;</span>
+<span class="nb">echo</span> <span class="s2">&quot;4&quot;&quot;2&quot;</span>
+expr <span class="m">41</span> + 1
+<span class="nb">echo</span> <span class="k">$((</span> <span class="m">29</span> <span class="o">+</span> <span class="m">13</span><span class="k">))</span>
+etc. etc.
+</pre></div>
+
+
+<p>So the next natural thing to do is to add a way to randomize the data that the
+command is operating on. Just like scripts added to run tests, now there are
+bash scripts for every challenge that allow you to manipulate files before
+running the command again.  Only if the output is still correct 
+(and tests pass, if they are present) will
+then the challenge be marked as correct.</p>
+<p>For example, for the <a href="https://cmdchallenge.com/#/sum_all_numbers">"sum all numbers"</a> challenge
+the script looks like this:</p>
+<div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
+<span class="nb">echo</span> <span class="k">$((</span> <span class="nv">$RANDOM</span> <span class="o">%</span> <span class="m">1000</span> <span class="k">))</span> &gt;&gt; sum-me.txt
+paste -sd+ sum-me.txt <span class="p">|</span> bc
+<span class="nb">exit</span> 0
+</pre></div>
+
+
+<div style="float: right;margin-right: 1em; margin-left: .5em;">
+    <a href="https://cmdchallenge.com/#/sum_all_numbers"><img src="https://i.imgur.com/rkqKXjW.png" alt="randomizers" /></a>
+</div>
+
+<p>Now if you type the command "<code>echo 42</code>" the randomizer check will fail since will also verify that
+the command can run against the modified "<code>sum-me.txt</code>" file.
+Currently, there are a randomizer scripts added for a subset of challenges.
+If you want to contribute and add more please feel free to send a <a href="https://github.com/jarv/cmdchallenge/pulls">pull request</a>.
+If you would like to
+read some more about how the site is built in an AWS free tier account see the earlier post on 
+<a href="/building-cmdchallenge.html">building cmdchallenge</a>. If you liked this write up let me know
+by following <a href="https://twitter.com/thecmdchallenge">@thecmdchallenge</a> on twitter or drop
+me mail at <a href="mailto:info@cmdchallenge.com">info@cmdchallenge.com</a>.</p>
+<p>Thanks!</p>
+              <!-- /.entry-content -->
+            </div>
+          </article>
+        </li>
+        
+        <li class="posts">
+          <article class="post">
+            <div class="post-content">
+              <header> 
+                <h1 class="content-entry-title">
                     <a href="../building-cmdchallenge.html" rel="bookmark" title="Permalink to Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go">Building cmdchallenge using Lambda and API Gateway in the AWS free-tier with Docker and Go</a>
                 </h1> 
               </header>
@@ -141,20 +244,20 @@ use a certificate from ACM and cache requests.</p>
 </ul>
 <p><p/> </p>
 <h2>The challenges are expressed in a single YAML, here an example of one challenge:</h2>
-<div class="highlight"><pre><span></span>  - slug: hello_world
-    version: 4
-    author: cmdchallenge
-    description: |
-      Print &quot;hello world&quot;.
-      Hint: There are many ways to print text on
-      the command line, one way is with the &#39;echo&#39;
-      command.
+<div class="highlight"><pre><span></span>  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">slug</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">hello_world</span>
+    <span class="l l-Scalar l-Scalar-Plain">version</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="l l-Scalar l-Scalar-Plain">author</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cmdchallenge</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">Print &quot;hello world&quot;.</span>
+      <span class="no">Hint: There are many ways to print text on</span>
+      <span class="no">the command line, one way is with the &#39;echo&#39;</span>
+      <span class="no">command.</span>
 
-      Try it below and good luck!
-    example: echo &#39;hello world&#39;
-    expected_output:
-      lines:
-        - &#39;hello world&#39;
+      <span class="no">Try it below and good luck!</span>
+    <span class="l l-Scalar l-Scalar-Plain">example</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">echo &#39;hello world&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">expected_output</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">lines</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;hello</span><span class="nv"> </span><span class="s">world&#39;</span>
 </pre></div>
 
 
@@ -490,40 +593,11 @@ use <a href="/rss.xml">rss</a>.</p>
             </div>
           </article>
         </li>
-        
-        <li class="posts">
-          <article class="post">
-            <div class="post-content">
-              <header> 
-                <h1 class="content-entry-title">
-                    <a href="../now-with-badges.html" rel="bookmark" title="Permalink to cmdchallenge - now with badges">cmdchallenge - now with badges</a>
-                </h1> 
-              </header>
-              <footer class="post-info">
-                <abbr>
-                  Tue 07 February 2017 
-                </abbr>
-              </footer><!-- /.post-info -->
-              <div class="entry-content entry-content-summary"> <p><img alt="New badges" src="https://i.imgur.com/hHDsAS4h.png" /></p>
-<p>Just returned from an extended weekend of traveling and now finally getting to
-open questions and issues on the <a href="https://cmdchallenge.com">cmdchallenge</a> site. Sorry
-for the slow responses.</p>
-<p>With a few hours to hack on the front-end I did a quick face-lift and also created some fun badges.
-Local browser storage is used to store state so unfortunately you will lose your progress from one
-computer to the next. If people want it I could add logins but it seems like it might be more trouble
-than it is worth.  New challenges are coming in via pull requests (thanks!) and I think I will move
-the user-contributed ones into their own category soon. If you have more ideas please let me know
-via <a href="https://twitter.com/thecmdchallenge">twitter</a> or mail.</p>
-<p><img alt="Tel Aviv" src="https://i.imgur.com/KpNPaoIm.jpg" /></p>
-<p>Now the back to work and back to cold weather...</p>
-              <!-- /.entry-content -->
-            </div>
-          </article>
-        </li>
     </ol><!-- /#posts-list -->
 </div>
 <p class="paginator">
-    Page 1 / 1
+    Page 1 / 2
+        <a href="../category/misc2.html">&raquo;</a>
 </p>
     
     </div>

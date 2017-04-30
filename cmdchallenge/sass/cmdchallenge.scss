@@ -120,16 +120,25 @@ div.post-content {
   footer.post-info {
     font-style: italic;
     color: #666;
+    text-align: left;
+    font-size: 1em;
   }
   h1.content-entry-title {
     display: block;
-    margin-left: -.5em;
-    border-left: 1px solid $badge-border;
-    border-top: 1px solid $badge-border;
-    border-bottom: 1px solid $badge-border;
-    padding-top: .2em;
-    padding-bottom: .2em;
-    padding-left: .4em;
+    // margin-left: -.5em;
+    // border-left: 1px solid $badge-border;
+    // border-top: 1px solid $badge-border;
+    // border-bottom: 1px solid $badge-border;
+    // padding-top: .2em;
+    // padding-bottom: .2em;
+    // padding-left: .4em;
+    font-size: 2em;
+    font-weight: normal;
+    margin: 0;
+    a {
+      font-size: 1em;
+      font-weight: normal;
+    }
   }
 
   div.entry-content-summary {
@@ -140,7 +149,6 @@ div.post-content {
     background-color: white;
     font-family: $helvetica;
     padding: 1em;
-    border-radius: 10px;
     @include media(max-width $medium) {
       border-radius: 0px;
       padding: .5em;
@@ -156,6 +164,7 @@ div.post-content {
       padding: .5em;
       background-color: black;
       margin: auto;
+      margin-bottom: 1em;
       width: 90%;
       @include media(max-width $medium) {
         width: 100%;

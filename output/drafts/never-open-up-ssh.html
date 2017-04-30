@@ -35,15 +35,35 @@
 <section class="post">
   <div class="post-content">
     <header class="post">
-      <h1 class="content-entry-title"> Building cmdchallenge to be almost serverless </h1> 
+      <h1 class="content-entry-title"> Adding randomizers to cmdchallenge </h1> 
     </header>
     <footer class="post-info">
       <abbr>
-        Tue 07 February 2017 
+        Wed 10 May 2017 
       </abbr>
     </footer><!-- /.post-info -->
     <div class="entry-content">
-      
+      <div class="highlight"><pre><span></span>root       <span class="m">460</span>  0.1 18.2 <span class="m">266968</span> <span class="m">186424</span> ?       Ss   Apr01  13:44 /usr/lib/systemd/systemd-journald
+</pre></div>
+
+
+<div class="highlight"><pre><span></span>pmap -d <span class="k">$(</span>pidof systemd-journald<span class="k">)</span>
+</pre></div>
+
+
+<p>```bash
+Apr 07 21:29:00 ip-172-31-24-119.ec2.internal sshd[5977]: PAM 2 more authentication failures; logname
+Apr 07 21:29:00 ip-172-31-24-119.ec2.internal sshd[5979]: Failed password for root from 58.218.199.13
+Apr 07 21:29:01 ip-172-31-24-119.ec2.internal sshd[5979]: Received disconnect from 58.218.199.133 por
+Apr 07 21:29:01 ip-172-31-24-119.ec2.internal sshd[5979]: Disconnected from 58.218.199.133 port 37209
+Apr 07 21:29:01 ip-172-31-24-119.ec2.internal sshd[5979]: PAM 2 more authentication failures; logname
+Apr 07 21:29:04 ip-172-31-24-119.ec2.internal sshd[5983]: pam_tally2(sshd:auth): Tally overflowed for
+Apr 07 21:29:04 ip-172-31-24-119.ec2.internal sshd[5983]: pam_unix(sshd:auth): authentication failure
+Apr 07 21:29:06 ip-172-31-24-119.ec2.internal systemd[1]: Started OpenSSH per-connection server daemo
+Apr 07 21:29:06 ip-172-31-24-119.ec2.internal sshd[5983]: Failed password for root from 58.218.199.13
+Apr 07 21:29:06 ip-172-31-24-119.ec2.internal sshd[5983]: pam_tally2(sshd:auth): Tally overflowed for
+Apr 07 21:29:08 ip-172-31-24-119.ec2.internal sshd[5983]: Failed password for root from 58.218.199.13
+````</p>
     </div><!-- /.entry-content -->
   </div>
 </section>

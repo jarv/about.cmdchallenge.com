@@ -135,20 +135,20 @@ use a certificate from ACM and cache requests.</p>
 </ul>
 <p><p/> </p>
 <h2>The challenges are expressed in a single YAML, here an example of one challenge:</h2>
-<div class="highlight"><pre><span></span>  - slug: hello_world
-    version: 4
-    author: cmdchallenge
-    description: |
-      Print &quot;hello world&quot;.
-      Hint: There are many ways to print text on
-      the command line, one way is with the &#39;echo&#39;
-      command.
+<div class="highlight"><pre><span></span>  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">slug</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">hello_world</span>
+    <span class="l l-Scalar l-Scalar-Plain">version</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="l l-Scalar l-Scalar-Plain">author</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">cmdchallenge</span>
+    <span class="l l-Scalar l-Scalar-Plain">description</span><span class="p p-Indicator">:</span> <span class="p p-Indicator">|</span>
+      <span class="no">Print &quot;hello world&quot;.</span>
+      <span class="no">Hint: There are many ways to print text on</span>
+      <span class="no">the command line, one way is with the &#39;echo&#39;</span>
+      <span class="no">command.</span>
 
-      Try it below and good luck!
-    example: echo &#39;hello world&#39;
-    expected_output:
-      lines:
-        - &#39;hello world&#39;
+      <span class="no">Try it below and good luck!</span>
+    <span class="l l-Scalar l-Scalar-Plain">example</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">echo &#39;hello world&#39;</span>
+    <span class="l l-Scalar l-Scalar-Plain">expected_output</span><span class="p p-Indicator">:</span>
+      <span class="l l-Scalar l-Scalar-Plain">lines</span><span class="p p-Indicator">:</span>
+        <span class="p p-Indicator">-</span> <span class="s">&#39;hello</span><span class="nv"> </span><span class="s">world&#39;</span>
 </pre></div>
 
 

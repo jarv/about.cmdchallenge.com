@@ -106,7 +106,7 @@ One nice thing about using AWS server-less components was that **a single t2.mic
 
 ## The challenges are expressed in a single YAML, here an example of one challenge:
 
-```
+```yaml
   - slug: hello_world
     version: 4
     author: cmdchallenge
