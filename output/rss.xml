@@ -1,5 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Sun, 30 Apr 2017 00:00:00 -0400</lastBuildDate><item><title>Adding checks against random data for shell submissions</title><link>https://about.cmdchallenge.com/randomizers.html</link><description>&lt;p&gt;One of the nice features of coding challenge sites like &lt;a href="https://hackerrank.com"&gt;hackerrank&lt;/a&gt; is that
+<rss version="2.0"><channel><title>cmdchallenge</title><link>https://about.cmdchallenge.com/</link><description></description><lastBuildDate>Thu, 11 May 2017 00:00:00 -0400</lastBuildDate><item><title>Open sourcing all of cmdchallenge.com</title><link>https://about.cmdchallenge.com/releasing-cmdchallenge.html</link><description>&lt;p&gt;&lt;a href="https://cmdchallenge.com"&gt;CMD Challenge&lt;/a&gt; is a web application that presents small
+shell challenges, where submissions are executed remotely in a Docker container.
+I am happy to announce today that I have decided to release the entire source code and terraform 
+configuration for it under the MIT license &lt;a href="https://github.com/jarv/cmdchallenge-site"&gt;on github&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;What this means is that anyone can host their own version of the site easily
+in the AWS free tier using the exact same configuration that is used for
+the main production.
+Kick the tires,
+clone and go nuts if you want or take a look if you want a very simple
+example of using API Gateway, Lambda, Dynamo and Docker. The biggest
+reward for this fun little side-project would be if someone tries to spin
+up their very own, please &lt;a href="https://twitter.com/thecmdchallenge"&gt;let me know on twitter&lt;/a&gt;
+if you do!&lt;/p&gt;
+&lt;p&gt;Part of the reason for doing this was to explore how I could simplify the setup using terraform.
+It is now extremely easy to set up and tear down an isolated and separate version
+of the site. The only part missing from the automated 
+setup is hosting static assets. The production cmdchallenge.com site uses 
+S3 with cloudfront in front for caching. If you try this out yourself you will
+need to serve assets locally.&lt;/p&gt;
+&lt;p&gt;Before your run the below steps it is important to know what you will
+be creating, the following AWS resources will be created with terraform:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;API Gateway&lt;/li&gt;
+&lt;li&gt;Lambda function&lt;/li&gt;
+&lt;li&gt;DynamoDB&lt;/li&gt;
+&lt;li&gt;t2.micro EC2 Instance running coreos&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;br /&gt;
+&lt;b&gt;Here is what you will need to do to create your own cmdchallenge.com in the AWS free tier:&lt;/b&gt;&lt;/p&gt;
+&lt;h3&gt;Step 1: Clone the cmdchallenge-site repository&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git clone https://github.com/jarv/cmdchallenge-site
+git submodule update --init --recursive
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Step 2: Create SSH keys for the EC2 instance&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ ./bin/create-ssh-keys
+Creating keypair &lt;span class="k"&gt;for&lt;/span&gt; ssh
+Generating public/private rsa key pair.
+Your identification has been saved in cmd_rsa.
+Your public key has been saved in cmd_rsa.pub.
+...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This will create a &lt;code&gt;private/ssh&lt;/code&gt; directory in the repostory root which contains the private and public keypair for the instance used for cmdchallenge.
+This &lt;code&gt;private/&lt;/code&gt; directory is ignored by git and should be kept safe. In addition to the ssh keys it will contain the CA and certificates needed for tls authentication for docker after the terraform run.&lt;/p&gt;
+&lt;h3&gt;Step 3: Update the AWS configuration for terraform&lt;/h3&gt;
+&lt;p&gt;Modify &lt;code&gt;terraform/site.tf&lt;/code&gt; with your AWS credentials. By default it looks for a profile named "cmdchallenge".
+See the &lt;a href="https://www.terraform.io/docs/providers/aws/"&gt;terraform documentation&lt;/a&gt; if you want to use something other than an aws profile&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;provider &amp;quot;aws&amp;quot; {
+  region = &amp;quot;us-east-1&amp;quot;
+  shared_credentials_file = &amp;quot;&lt;span class="cp"&gt;${&lt;/span&gt;&lt;span class="n"&gt;pathexpand&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;~/.aws/credentials&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="cp"&gt;}&lt;/span&gt;&amp;quot;
+  profile = &amp;quot;cmdchallenge&amp;quot;
+}
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Step 4: Run terraform&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; terraform
+terraform init
+terraform apply
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The process of bringing up all the resources in AWS takes around 4 or 5 minutes.
+At the very end you will see some terraform outputs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;Outputs&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+
+&lt;span class="n"&gt;ami_id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;ami&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;ad593cbb&lt;/span&gt;
+&lt;span class="n"&gt;ec2_public_ip&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mf"&gt;107.23&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="mf"&gt;137.206&lt;/span&gt;
+&lt;span class="n"&gt;invoke_url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="o"&gt;://&lt;/span&gt;&lt;span class="mi"&gt;9&lt;/span&gt;&lt;span class="n"&gt;hz0doczmb&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;execute&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;api&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;us&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;east&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;amazonaws&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="na"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;prod&lt;/span&gt;
+&lt;span class="n"&gt;test_hello_world&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;curl&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;https://9hz0doczmb.execute-api.us-east-1.amazonaws.com/prod/?cmd=echo+hello+world&amp;amp;challenge_slug=hello_world&amp;#39;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Paste the curl command into your terminal to confirm that everything is working:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ curl &lt;span class="s1"&gt;&amp;#39;https://9hz0doczmb.execute-api.us-east-1.amazonaws.com/prod/?cmd=echo+hello+world&amp;amp;challenge_slug=hello_world&amp;#39;&lt;/span&gt;
+&lt;span class="o"&gt;{&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;challenge_slug&amp;quot;&lt;/span&gt;: &lt;span class="s2"&gt;&amp;quot;hello_world&amp;quot;&lt;/span&gt;, &lt;span class="s2"&gt;&amp;quot;rand_error&amp;quot;&lt;/span&gt;: false, &lt;span class="s2"&gt;&amp;quot;output&amp;quot;&lt;/span&gt;: &lt;span class="s2"&gt;&amp;quot;hello world&amp;quot;&lt;/span&gt;, &lt;span class="s2"&gt;&amp;quot;test_errors&amp;quot;&lt;/span&gt;: null, &lt;span class="s2"&gt;&amp;quot;return_code&amp;quot;&lt;/span&gt;: 0, &lt;span class="s2"&gt;&amp;quot;correct&amp;quot;&lt;/span&gt;: true&lt;span class="o"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h3&gt;Step 5: Serve assets&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;make serve
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Point your browser to http://localhost:8000/ and profit!&lt;/p&gt;</description><dc:creator xmlns:dc="http://purl.org/dc/elements/1.1/">jarv</dc:creator><pubDate>Thu, 11 May 2017 00:00:00 -0400</pubDate><guid isPermaLink="false">tag:about.cmdchallenge.com,2017-05-11:releasing-cmdchallenge.html</guid></item><item><title>Adding checks against random data for shell submissions</title><link>https://about.cmdchallenge.com/randomizers.html</link><description>&lt;p&gt;One of the nice features of coding challenge sites like &lt;a href="https://hackerrank.com"&gt;hackerrank&lt;/a&gt; is that
 when you submit an algorithm it will also be checked against random data. This
 validates the performance of the algorithm and will test it against different inputs.
 &lt;a href="https://cmdchallenge.com"&gt;CMD Challenge&lt;/a&gt; is a web application that executes shell commands

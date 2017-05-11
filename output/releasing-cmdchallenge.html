@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>cmdchallenge</title>
+    <meta name="description" content="">
+    <meta http-equiv="expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="theme/css/normalize.min.css">
+    <script src="theme/js/vendor/modernizr-2.8.3.min.js"></script>
+    <link rel="stylesheet" href="/theme/css/cmdchallenge.css">
+    <link rel="stylesheet" href="/theme/css/pygments.css">
+    <link href="https://about.cmdchallenge.com/rss.xml" type="application/rss+xml" rel="alternate" title="cmdchallenge RSS Feed" />
+  </head>
+  <body>
+    <div class="wrapper">
+        <div class="navbar">
+          <ul>
+            <li><a href="https://cmdchallenge.com">cmdchallenge</a></li>
+            <li><a href="/rss.xml">rss</a></li>
+            <li><a href="https://twitter.com/thecmdchallenge">twitter</a></li>
+            <li><a href="mailto:info@cmdchallenge.com">contact</a></li>
+          </ul>
+        </div>
+        <div class="header"><div class="challenge" onclick="location.href='https://cmdchallenge.com';" style="cursor: pointer;"> _____ _____ ____     _____ _____ _____ __    __    _____ _____ _____ _____ 
+|     |     |    \   |     |  |  |  _  |  |  |  |  |   __|   | |   __|   __|
+|   --| | | |  |  |  |   --|     |     |  |__|  |__|   __| | | |  |  |   __|
+|_____|_|_|_|____/   |_____|__|__|__|__|_____|_____|_____|_|___|_____|_____|
+                                  ~ about ~</div></div>
+
+<section class="post">
+  <div class="post-content">
+    <header class="post">
+      <h1 class="content-entry-title"> Open sourcing all of cmdchallenge.com </h1> 
+    </header>
+    <footer class="post-info">
+      <abbr>
+        Thu 11 May 2017 
+      </abbr>
+    </footer><!-- /.post-info -->
+    <div class="entry-content">
+      <p><a href="https://cmdchallenge.com">CMD Challenge</a> is a web application that presents small
+shell challenges, where submissions are executed remotely in a Docker container.
+I am happy to announce today that I have decided to release the entire source code and terraform 
+configuration for it under the MIT license <a href="https://github.com/jarv/cmdchallenge-site">on github</a>.</p>
+<p>What this means is that anyone can host their own version of the site easily
+in the AWS free tier using the exact same configuration that is used for
+the main production.
+Kick the tires,
+clone and go nuts if you want or take a look if you want a very simple
+example of using API Gateway, Lambda, Dynamo and Docker. The biggest
+reward for this fun little side-project would be if someone tries to spin
+up their very own, please <a href="https://twitter.com/thecmdchallenge">let me know on twitter</a>
+if you do!</p>
+<p>Part of the reason for doing this was to explore how I could simplify the setup using terraform.
+It is now extremely easy to set up and tear down an isolated and separate version
+of the site. The only part missing from the automated 
+setup is hosting static assets. The production cmdchallenge.com site uses 
+S3 with cloudfront in front for caching. If you try this out yourself you will
+need to serve assets locally.</p>
+<p>Before your run the below steps it is important to know what you will
+be creating, the following AWS resources will be created with terraform:</p>
+<ul>
+<li>API Gateway</li>
+<li>Lambda function</li>
+<li>DynamoDB</li>
+<li>t2.micro EC2 Instance running coreos</li>
+</ul>
+<p><br />
+<b>Here is what you will need to do to create your own cmdchallenge.com in the AWS free tier:</b></p>
+<h3>Step 1: Clone the cmdchallenge-site repository</h3>
+<div class="highlight"><pre><span></span>git clone https://github.com/jarv/cmdchallenge-site
+git submodule update --init --recursive
+</pre></div>
+
+
+<h3>Step 2: Create SSH keys for the EC2 instance</h3>
+<div class="highlight"><pre><span></span>$ ./bin/create-ssh-keys
+Creating keypair <span class="k">for</span> ssh
+Generating public/private rsa key pair.
+Your identification has been saved in cmd_rsa.
+Your public key has been saved in cmd_rsa.pub.
+...
+</pre></div>
+
+
+<p>This will create a <code>private/ssh</code> directory in the repostory root which contains the private and public keypair for the instance used for cmdchallenge.
+This <code>private/</code> directory is ignored by git and should be kept safe. In addition to the ssh keys it will contain the CA and certificates needed for tls authentication for docker after the terraform run.</p>
+<h3>Step 3: Update the AWS configuration for terraform</h3>
+<p>Modify <code>terraform/site.tf</code> with your AWS credentials. By default it looks for a profile named "cmdchallenge".
+See the <a href="https://www.terraform.io/docs/providers/aws/">terraform documentation</a> if you want to use something other than an aws profile</p>
+<div class="highlight"><pre><span></span>provider &quot;aws&quot; {
+  region = &quot;us-east-1&quot;
+  shared_credentials_file = &quot;<span class="cp">${</span><span class="n">pathexpand</span><span class="p">(</span><span class="s2">&quot;~/.aws/credentials&quot;</span><span class="p">)</span><span class="cp">}</span>&quot;
+  profile = &quot;cmdchallenge&quot;
+}
+</pre></div>
+
+
+<h3>Step 4: Run terraform</h3>
+<div class="highlight"><pre><span></span><span class="nb">cd</span> terraform
+terraform init
+terraform apply
+</pre></div>
+
+
+<p>The process of bringing up all the resources in AWS takes around 4 or 5 minutes.
+At the very end you will see some terraform outputs:</p>
+<div class="highlight"><pre><span></span><span class="n">Outputs</span><span class="o">:</span>
+
+<span class="n">ami_id</span> <span class="o">=</span> <span class="n">ami</span><span class="o">-</span><span class="n">ad593cbb</span>
+<span class="n">ec2_public_ip</span> <span class="o">=</span> <span class="mf">107.23</span><span class="o">.</span><span class="mf">137.206</span>
+<span class="n">invoke_url</span> <span class="o">=</span> <span class="n">https</span><span class="o">://</span><span class="mi">9</span><span class="n">hz0doczmb</span><span class="o">.</span><span class="na">execute</span><span class="o">-</span><span class="n">api</span><span class="o">.</span><span class="na">us</span><span class="o">-</span><span class="n">east</span><span class="o">-</span><span class="mi">1</span><span class="o">.</span><span class="na">amazonaws</span><span class="o">.</span><span class="na">com</span><span class="o">/</span><span class="n">prod</span>
+<span class="n">test_hello_world</span> <span class="o">=</span> <span class="n">curl</span> <span class="s1">&#39;https://9hz0doczmb.execute-api.us-east-1.amazonaws.com/prod/?cmd=echo+hello+world&amp;challenge_slug=hello_world&#39;</span>
+</pre></div>
+
+
+<p>Paste the curl command into your terminal to confirm that everything is working:</p>
+<div class="highlight"><pre><span></span>$ curl <span class="s1">&#39;https://9hz0doczmb.execute-api.us-east-1.amazonaws.com/prod/?cmd=echo+hello+world&amp;challenge_slug=hello_world&#39;</span>
+<span class="o">{</span><span class="s2">&quot;challenge_slug&quot;</span>: <span class="s2">&quot;hello_world&quot;</span>, <span class="s2">&quot;rand_error&quot;</span>: false, <span class="s2">&quot;output&quot;</span>: <span class="s2">&quot;hello world&quot;</span>, <span class="s2">&quot;test_errors&quot;</span>: null, <span class="s2">&quot;return_code&quot;</span>: 0, <span class="s2">&quot;correct&quot;</span>: true<span class="o">}</span>
+</pre></div>
+
+
+<h3>Step 5: Serve assets</h3>
+<div class="highlight"><pre><span></span>make serve
+</pre></div>
+
+
+<p>Point your browser to http://localhost:8000/ and profit!</p>
+    </div><!-- /.entry-content -->
+  </div>
+</section>
+    
+    </div>
+    <footer id="page-footer">
+      <div>Created with <a href="https://github.com/getpelican/pelican">Pelican</a> using the <a href="https://github.com/jarv/about.cmdchallenge.com">cmdchallenge</a> theme.</div>
+      <div>The posts on this page represent my views and opinions do not represent those of my employer.</div>
+    </footer>
+<script>
+				(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+				(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+				m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+				})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+				ga('create', 'UA-91656263-1', 'auto');
+				ga('send', 'pageview');
+			</script>
+</body>
+</html>
